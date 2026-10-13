@@ -6,7 +6,7 @@ import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Color;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
@@ -75,16 +75,14 @@ final class LightGuideRenderer
 
     private static void renderTriangles(Consumer<BufferBuilder> consumer)
     {
-        BufferBuilder builder = Tessellator.getInstance().getBuffer();
-
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
-        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        BufferBuilder builder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
@@ -169,7 +167,7 @@ final class LightGuideRenderer
 
     private static void vertex(BufferBuilder builder, Matrix4f m, float x, float y, float z, float r, float g, float b, float a)
     {
-        builder.vertex(m, x, y, z).color(r, g, b, a).next();
+        builder.vertex(m, x, y, z).color(r, g, b, a);
     }
 
     private static void line(BufferBuilder builder, MatrixStack stack, float x1, float y1, float z1, float x2, float y2, float z2, float t, Color color, float alpha)
@@ -245,15 +243,13 @@ final class LightGuideRenderer
      */
     private static void renderStencilTriangles(Consumer<BufferBuilder> consumer)
     {
-        BufferBuilder builder = Tessellator.getInstance().getBuffer();
-
         RenderSystem.disableBlend();
         RenderSystem.disableCull();
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
 
-        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        BufferBuilder builder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());

@@ -45,7 +45,7 @@
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
     "bbs": ">=3.0-0",
-    "minecraft": "~1.21.1",
+    "minecraft": "~1.21.4",
     "irl-core": "*",
     "java": ">=21"
   }

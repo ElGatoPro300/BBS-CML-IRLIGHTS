@@ -1,7 +1,7 @@
 package qualet.irlite.client.forms;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.systems.VertexSorter;
+import com.mojang.blaze3d.systems.ProjectionType;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.utils.colors.Color;
 import net.minecraft.client.MinecraftClient;
@@ -59,7 +59,7 @@ public final class WorldLightGuideOverlay
 
         Matrix4f oldProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
         Matrix4f oldModelView = new Matrix4f(RenderSystem.getModelViewMatrix());
-        VertexSorter oldSorting = RenderSystem.getVertexSorting();
+        ProjectionType oldProjectionType = RenderSystem.getProjectionType();
         ShaderProgram oldShader = RenderSystem.getShader();
         float[] oldColor = RenderSystem.getShaderColor().clone();
         int oldDraw = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
@@ -76,7 +76,7 @@ public final class WorldLightGuideOverlay
         int oldDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
         var modelView = RenderSystem.getModelViewStack();
 
-        modelView.push();
+        modelView.pushMatrix();
         try
         {
             MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
@@ -84,9 +84,8 @@ public final class WorldLightGuideOverlay
 
             for (Guide guide : pending)
             {
-                modelView.peek().getPositionMatrix().set(guide.modelView());
-                RenderSystem.applyModelViewMatrix();
-                RenderSystem.setProjectionMatrix(guide.projection(), VertexSorter.BY_Z);
+                modelView.set(guide.modelView());
+                RenderSystem.setProjectionMatrix(guide.projection(), ProjectionType.PERSPECTIVE);
                 MatrixStack stack = new MatrixStack();
                 stack.peek().getPositionMatrix().set(guide.pose());
 
@@ -103,14 +102,9 @@ public final class WorldLightGuideOverlay
         finally
         {
             pending.clear();
-            modelView.pop();
-            // The applied matrix can differ from the stack top (BBS's UI does this).
-            modelView.push();
-            modelView.peek().getPositionMatrix().set(oldModelView);
-            RenderSystem.applyModelViewMatrix();
-            modelView.pop();
-            RenderSystem.setProjectionMatrix(oldProjection, oldSorting);
-            RenderSystem.setShader(() -> oldShader);
+            modelView.popMatrix();
+            RenderSystem.setProjectionMatrix(oldProjection, oldProjectionType);
+            if (oldShader != null) RenderSystem.setShader(oldShader); else RenderSystem.clearShader();
             RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
             if (oldDepth) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
             RenderSystem.depthMask(oldDepthWrite);

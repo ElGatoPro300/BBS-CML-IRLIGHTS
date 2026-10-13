@@ -1,7 +1,7 @@
 package qualet.irlite.mixin.client;
 
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.RenderTickCounter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,8 +17,9 @@ import qualet.irlite.client.light.ReplayOutlineContext;
 public class GameRendererLightMixin
 {
     @Inject(method = "renderWorld", at = @At("HEAD"))
-    private void irlite$collectLights(float tickDelta, long limitTime, MatrixStack matrices, CallbackInfo ci)
+    private void irlite$collectLights(RenderTickCounter tickCounter, CallbackInfo ci)
     {
+        float tickDelta = tickCounter.getTickDelta(false);
         WorldLightGuideOverlay.beginFrame();
         // Dev VL profiler (-Dirlite.profileVl=true): the shadow bake below runs
         // strictly before the Iris pass sequence, so its GL_TIME_ELAPSED bracket
@@ -62,7 +63,7 @@ public class GameRendererLightMixin
                      shift = At.Shift.AFTER,
                      ordinal = 0),
             require = 1)
-    private void irlite$uploadLights(float tickDelta, long limitTime, MatrixStack matrices, CallbackInfo ci)
+    private void irlite$uploadLights(RenderTickCounter tickCounter, CallbackInfo ci)
     {
         long uploadT0 = System.nanoTime();
         FramePipeline.uploadIfPending();
@@ -71,9 +72,9 @@ public class GameRendererLightMixin
 
     /** Iris has finished world compositing; BBS has not captured the film preview yet. */
     @Inject(method = "render", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(FJLnet/minecraft/client/util/math/MatrixStack;)V",
+        target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V",
         shift = At.Shift.AFTER), require = 1)
-    private void irlite$drawLightGuides(float tickDelta, long startTime, boolean tick, CallbackInfo ci)
+    private void irlite$drawLightGuides(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci)
     {
         WorldLightGuideOverlay.flush();
     }
