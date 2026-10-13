@@ -191,7 +191,7 @@ processResources {
 }
 
 // 1.21.1 is Java 21 (since 1.20.5); the 1.20.x reference profiles stay on 17.
-def targetJavaVersion = (mcTarget == '1.21.4') ? 21 : 17
+def targetJavaVersion = mcTarget.startsWith('1.21') ? 21 : 17
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
     // this fixes some edge cases with special characters not displaying correctly

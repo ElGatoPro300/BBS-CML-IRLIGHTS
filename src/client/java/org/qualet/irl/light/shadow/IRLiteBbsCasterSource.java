@@ -771,6 +771,8 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
         {
             h = mix(h, t.scale.x); h = mix(h, t.scale.y); h = mix(h, t.scale.z);
             h = mix(h, t.rotate.x); h = mix(h, t.rotate.y); h = mix(h, t.rotate.z);
+            // BBS 2.2.1 removed Transform.rotate2 — the legacy second rotation now
+            // folds into the single `rotate`, so hashing `rotate` alone is sufficient.
         }
         // WARNING (Ф3 audit): this deliberately covers only form-IDENTITY + Transform,
         // NOT the form's internal morph/animation pose. It is dead today (isStatic is
