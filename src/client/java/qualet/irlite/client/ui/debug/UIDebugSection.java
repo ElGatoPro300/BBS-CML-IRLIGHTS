@@ -1,13 +1,12 @@
 package qualet.irlite.client.ui.debug;
 
-import qualet.irlite.client.diag.VlProfiler;
-
-import mchorse.bbs_mod.l10n.L10n;
-import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
 import mchorse.bbs_mod.ui.utils.UI;
+
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.ui.IRLightsUIKeys;
 
 /** Debug controls rendered at the bottom of the IRLights presets section. */
 public final class UIDebugSection
@@ -28,16 +27,12 @@ public final class UIDebugSection
             return;
         }
 
-        UILabel header = UI.label(L10n.lang("irlite.ui.debug.title"));
+        UILabel header = UI.label(IRLightsUIKeys.DEBUG);
         header.marginTop(6);
         options.add(header);
 
         boolean on = VlProfiler.isEnabledOrPending();
-        IKey labelKey = on
-            ? L10n.lang("irlite.ui.debug.hide_overlay")
-            : L10n.lang("irlite.ui.debug.show_overlay");
-
-        UIButton button = new UIButton(labelKey, (b) ->
+        UIButton button = new UIButton(on ? IRLightsUIKeys.HIDE_PERFORMANCE : IRLightsUIKeys.SHOW_PERFORMANCE, (b) ->
         {
             VlProfiler.toggle();
 
@@ -47,7 +42,7 @@ public final class UIDebugSection
             }
         });
 
-        button.tooltip(L10n.lang("irlite.ui.debug.tooltip"));
+        button.tooltip(IRLightsUIKeys.PERFORMANCE_HELP);
         options.add(button);
     }
 }

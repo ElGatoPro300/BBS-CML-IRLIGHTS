@@ -1,71 +1,53 @@
 package qualet.irlite.client;
 
+import mchorse.bbs_mod.api.BBSAddonMod;
+import mchorse.bbs_mod.api.Subscribe;
+import mchorse.bbs_mod.api.client.events.RegisterFormEditorsEvent;
+import mchorse.bbs_mod.api.client.events.RegisterFormRenderersEvent;
+import mchorse.bbs_mod.api.client.events.RegisterKeyframeEditorsEvent;
+import mchorse.bbs_mod.api.client.events.RegisterL10nEvent;
+import mchorse.bbs_mod.resources.Link;
+
 import qualet.irlite.client.forms.PointLightFormRenderer;
 import qualet.irlite.client.forms.SpotlightFormRenderer;
 import qualet.irlite.client.ui.forms.editors.forms.UIPointLightForm;
 import qualet.irlite.client.ui.forms.editors.forms.UISpotlightForm;
+import qualet.irlite.client.ui.replays.UIReplaySelectionKeyframeFactory;
 import qualet.irlite.forms.PointLightForm;
 import qualet.irlite.forms.SpotlightForm;
 
-import mchorse.bbs_mod.addons.BBSClientAddon;
-import mchorse.bbs_mod.events.register.RegisterFormCategoriesEvent;
-import mchorse.bbs_mod.events.register.RegisterFormsRenderersEvent;
-import mchorse.bbs_mod.events.register.RegisterL10nEvent;
-import mchorse.bbs_mod.forms.categories.FormCategory;
-import mchorse.bbs_mod.resources.Link;
-import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
-import mchorse.bbs_mod.utils.colors.Colors;
-
-public class IrlightsClientAddon extends BBSClientAddon
+public class IrlightsClientAddon implements BBSAddonMod
 {
-    public IrlightsClientAddon()
-    {
-        super();
-        registerReplayColors();
-    }
-
     @Override
-    protected void registerL10n(RegisterL10nEvent event)
+    public int requiredApiVersion()
     {
-        event.l10n.registerOne((lang) -> new Link("irlite", "strings/" + lang + ".json"));
-        event.l10n.reload();
+        return 2;
     }
 
-    @Override
-    protected void registerFormsRenderers(RegisterFormsRenderersEvent event)
+    @Subscribe
+    public void registerLanguages(RegisterL10nEvent event)
     {
-        event.registerRenderer(PointLightForm.class, PointLightFormRenderer::new);
-        event.registerRenderer(SpotlightForm.class, SpotlightFormRenderer::new);
-
-        event.registerPanel(PointLightForm.class, UIPointLightForm::new);
-        event.registerPanel(SpotlightForm.class, UISpotlightForm::new);
+        event.l10n.registerOne(language -> new Link("irlite", "strings/" + language + ".json"));
     }
 
-    @Override
-    protected void registerFormCategories(RegisterFormCategoriesEvent event)
+    @Subscribe
+    public void registerKeyframeEditors(RegisterKeyframeEditorsEvent event)
     {
-        FormCategory extra = event.getCategories().getExtraForms().getExtraCategory();
-        extra.addForm(new PointLightForm());
-        extra.addForm(new SpotlightForm());
+        event.registerProperty("outline_replays", UIReplaySelectionKeyframeFactory::new);
+        event.registerProperty("light_replays", UIReplaySelectionKeyframeFactory::new);
     }
 
-    private void registerReplayColors()
+    @Subscribe
+    public void registerRenderers(RegisterFormRenderersEvent event)
     {
-        /* brightness */
-        UIReplaysEditor.registerColor("intensity", Colors.ORANGE);
-        /* volumetric group */
-        UIReplaysEditor.registerColor("beam_strength", Colors.CYAN);
-        UIReplaysEditor.registerColor("vl_density", 0x33ccaa);        // teal
-        UIReplaysEditor.registerColor("anisotropy", 0x66ccff);        // light blue
-        /* shape / reach */
-        UIReplaysEditor.registerColor("bulb_size", Colors.PINK);      // penumbra / softness
-        UIReplaysEditor.registerColor("radius", Colors.GREEN);        // point reach / spot outer angle
-        UIReplaysEditor.registerColor("range", 0x33ff88);             // spotlight reach
-        UIReplaysEditor.registerColor("inner_radius", 0x88ff44);      // lime, spot inner angle
-        /* light mask */
-        UIReplaysEditor.registerColor("entities_only", Colors.DEEP_PINK);
-        UIReplaysEditor.registerColor("blocks_only", 0xffaa33);       // amber
-        /* shadows */
-        UIReplaysEditor.registerColor("shadows", 0x9b6dff);           // purple
+        event.register(PointLightForm.class, PointLightFormRenderer::new);
+        event.register(SpotlightForm.class, SpotlightFormRenderer::new);
+    }
+
+    @Subscribe
+    public void registerEditors(RegisterFormEditorsEvent event)
+    {
+        event.register(PointLightForm.class, UIPointLightForm::new);
+        event.register(SpotlightForm.class, UISpotlightForm::new);
     }
 }

@@ -1,44 +1,50 @@
 package qualet.irlite;
 
-import qualet.irlite.forms.PointLightForm;
-import qualet.irlite.forms.SpotlightForm;
-
 import mchorse.bbs_mod.BBSMod;
-import mchorse.bbs_mod.addons.BBSAddon;
+import mchorse.bbs_mod.api.BBSAddonMod;
+import mchorse.bbs_mod.api.Subscribe;
+import mchorse.bbs_mod.api.events.RegisterFormsEvent;
+import mchorse.bbs_mod.api.events.RegisterSettingsEvent;
+import mchorse.bbs_mod.api.events.RegisterSourcePacksEvent;
 import mchorse.bbs_mod.data.DataToString;
 import mchorse.bbs_mod.data.types.BaseType;
 import mchorse.bbs_mod.data.types.MapType;
-import mchorse.bbs_mod.events.register.RegisterBBSSettingsEvent;
-import mchorse.bbs_mod.events.register.RegisterFormsEvent;
-import mchorse.bbs_mod.events.register.RegisterSourcePacksEvent;
-import mchorse.bbs_mod.l10n.keys.IKey;
-import mchorse.bbs_mod.resources.packs.InternalAssetsSourcePack;
 import mchorse.bbs_mod.settings.SettingsBuilder;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
 
 import java.io.File;
 
-/** Registers IRLights as its own settings module and forms provider for BBS CML. */
-public class IrlightsAddon extends BBSAddon
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+
+/** Registers IRLights as its own settings module: an own icon in the overlay's
+ *  module strip and an own config/bbs/settings/irlights.json, instead of two
+ *  categories bolted onto the end of BBS's own settings list.
+ *
+ *  The subscriber method must stay public and take exactly one parameter —
+ *  BBS's EventBus reflects over getDeclaredMethods() and invokes without
+ *  setAccessible, and it dispatches by exact event class. */
+public class IrlightsAddon implements BBSAddonMod
 {
     private static final String MODULE = "irlights";
 
-    @Override
-    protected void registerForms(RegisterFormsEvent event)
+    @Subscribe
+    public void registerSourcePacks(RegisterSourcePacksEvent event)
     {
-        event.getForms().register(PointLightForm.FORM_ID, PointLightForm.class, null);
-        event.getForms().register(SpotlightForm.FORM_ID, SpotlightForm.class, null);
+        event.registerAddon("irlite", IrlightsAddon.class);
     }
 
-    @Override
-    protected void registerSourcePacks(RegisterSourcePacksEvent event)
+    @Subscribe
+    public void registerForms(RegisterFormsEvent event)
     {
-        event.provider.register(new InternalAssetsSourcePack("irlite", "assets/irlite/assets", IrlightsAddon.class));
+        event.register(PointLightForm.FORM_ID, PointLightForm.class);
+        event.register(SpotlightForm.FORM_ID, SpotlightForm.class);
     }
 
-    @Override
-    protected void registerBBSSettings(RegisterBBSSettingsEvent event)
+    @Subscribe
+    public void registerSettings(RegisterSettingsEvent event)
     {
-        build(event.getBuilder());
+        event.register(Icons.LIGHT, MODULE, new File(BBSMod.getSettingsFolder(), "irlights.json"), IrlightsAddon::build);
     }
 
     private static void build(SettingsBuilder builder)
@@ -52,6 +58,17 @@ public class IrlightsAddon extends BBSAddon
         IrliteConfig.vlIntensity = builder.getFloat("vl_intensity", old.getFloat("vl_intensity", 1F), 0F, 5F);
         IrliteConfig.maxShaderLights = builder.getInt("max_shader_lights", old.getInt("max_shader_lights", 0), 0, 2048);
         IrliteConfig.showGuides = builder.getBoolean("show_guides", old.getBool("show_guides", false));
+
+        // Wave 2 (2026-09-15): the surface half of the former Iris screen —
+        // diffuse/specular/toon and their numbers now ride the globals UBO.
+        builder.category("lighting");
+        IrliteConfig.diffuse = builder.getBoolean("diffuse", old.getBool("diffuse", true));
+        IrliteConfig.intensity = builder.getFloat("intensity", old.getFloat("intensity", 1F), 0F, 4F);
+        IrliteConfig.specular = builder.getBoolean("specular", old.getBool("specular", true));
+        IrliteConfig.specularIntensity = builder.getFloat("specular_intensity", old.getFloat("specular_intensity", 1F), 0F, 4F);
+        IrliteConfig.toon = builder.getBoolean("toon", old.getBool("toon", false));
+        IrliteConfig.toonBands = builder.getInt("toon_bands", old.getInt("toon_bands", 3), 2, 8);
+        IrliteConfig.toonSmooth = builder.getFloat("toon_smooth", old.getFloat("toon_smooth", 0.10F), 0F, 0.5F);
 
         builder.category("volumetric");
         IrliteConfig.vlSteps = builder.getInt("vl_steps", old.getInt("vl_steps", 48), 8, 64);
@@ -69,12 +86,7 @@ public class IrlightsAddon extends BBSAddon
         IrliteConfig.vlDitherTemporal = builder.getBoolean("vl_dither_temporal", old.getBool("vl_dither_temporal", true));
 
         builder.category("shadows");
-        IrliteConfig.shadowQuality = builder.getInt("shadow_quality", old.getInt("shadow_quality", 1), 0, 3).modes(
-            IKey.constant("LOW"),
-            IKey.constant("MEDIUM"),
-            IKey.constant("HIGH"),
-            IKey.constant("ULTRA")
-        );
+        IrliteConfig.shadowQuality = builder.getInt("shadow_quality", old.getInt("shadow_quality", 1), 0, 3);
         IrliteConfig.shadowBlocks = builder.getBoolean("shadow_blocks", old.getBool("shadow_blocks", true));
         // Wave 3 (2026-07-21): the live half of what used to be five Iris options.
         // shadowsLive is the everyday on/off; IRLITE_SHADOWS stays on the Iris
@@ -83,17 +95,14 @@ public class IrlightsAddon extends BBSAddon
         // constants now, baked into the pack.
         IrliteConfig.shadowsLive = builder.getBoolean("shadows_live", old.getBool("shadows_live", true));
         IrliteConfig.shadowSoftness = builder.getFloat("shadow_softness", old.getFloat("shadow_softness", 0.10F), 0F, 0.8F);
+        IrliteConfig.shadowPartialTile = builder.getBoolean("shadow_partial_tile", old.getBool("shadow_partial_tile", true));
 
         // Wave 1 (2026-07-21): these ten used to be Iris-screen #defines, each
         // costing a shaderpack recompile. They now ride the globals UBO, so they
         // are live here and gone from the pack's settings screen.
         builder.category("outline");
         IrliteConfig.outline = builder.getBoolean("outline", old.getBool("outline", true));
-        IrliteConfig.outlineTarget = builder.getInt("outline_target", old.getInt("outline_target", 1), 0, 2).modes(
-            IKey.constant("ALL"),
-            IKey.constant("ENTITIES"),
-            IKey.constant("BLOCKS")
-        );
+        IrliteConfig.outlineTarget = builder.getInt("outline_target", old.getInt("outline_target", 1), 0, 2);
         IrliteConfig.outlineStrength = builder.getFloat("outline_strength", old.getFloat("outline_strength", 0.65F), 0F, 3F);
         IrliteConfig.outlinePixelSize = builder.getInt("outline_pixel_size", old.getInt("outline_pixel_size", 6), 1, 6);
         IrliteConfig.outlineFresnelPower = builder.getFloat("outline_fresnel_power", old.getFloat("outline_fresnel_power", 2.2F), 1F, 4F);
@@ -108,10 +117,16 @@ public class IrlightsAddon extends BBSAddon
         builder.category("patcher");
     }
 
-    /**
-     * Reads saved settings from prior formats (standalone irlights.json or legacy "irlite" block in bbs.json)
-     * if bbs.json does not yet have our categories registered.
-     */
+    /** The settings used to live as an "irlite" category inside BBS's own
+     *  bbs.json. BBS has no cross-module migration, and once this module writes
+     *  its file that orphaned block is dropped on the next bbs.json save — so
+     *  read it once and use it as the defaults the builder registers.
+     *
+     *  One-shot: the guard is our own file already carrying this layout, not
+     *  merely existing — a leftover irlights.json from an older experiment has
+     *  the name but not the categories, and must not be mistaken for a
+     *  completed migration. Settings.toData writes every registered category,
+     *  so "volumetric" is present in any file this build ever saved. */
     private static MapType legacyDefaults()
     {
         if (alreadyMigrated())
@@ -119,50 +134,25 @@ public class IrlightsAddon extends BBSAddon
             return new MapType();
         }
 
-        File own = new File(BBSMod.getSettingsFolder(), MODULE + ".json");
-        if (own.exists())
+        File bbs = new File(BBSMod.getSettingsFolder(), "bbs.json");
+
+        if (!bbs.exists())
         {
-            try
-            {
-                BaseType data = DataToString.read(own);
-                if (data != null && data.isMap())
-                {
-                    MapType res = new MapType();
-                    for (String key : data.asMap().keys())
-                    {
-                        BaseType cat = data.asMap().get(key);
-                        if (cat != null && cat.isMap())
-                        {
-                            res.combine(cat.asMap());
-                        }
-                    }
-                    if (!res.isEmpty())
-                    {
-                        return res;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                // Fall through
-            }
+            return new MapType();
         }
 
-        File bbs = new File(BBSMod.getSettingsFolder(), "bbs.json");
-        if (bbs.exists())
+        try
         {
-            try
+            BaseType data = DataToString.read(bbs);
+
+            if (data != null && data.isMap() && data.asMap().has("irlite"))
             {
-                BaseType data = DataToString.read(bbs);
-                if (data != null && data.isMap() && data.asMap().has("irlite"))
-                {
-                    return data.asMap().getMap("irlite");
-                }
+                return data.asMap().getMap("irlite");
             }
-            catch (Exception e)
-            {
-                // Fall through
-            }
+        }
+        catch (Exception e)
+        {
+            // Unreadable or malformed bbs.json — fall through to plain defaults.
         }
 
         return new MapType();
@@ -170,15 +160,17 @@ public class IrlightsAddon extends BBSAddon
 
     private static boolean alreadyMigrated()
     {
-        File bbs = new File(BBSMod.getSettingsFolder(), "bbs.json");
-        if (!bbs.exists())
+        File own = new File(BBSMod.getSettingsFolder(), MODULE + ".json");
+
+        if (!own.exists())
         {
             return false;
         }
 
         try
         {
-            BaseType data = DataToString.read(bbs);
+            BaseType data = DataToString.read(own);
+
             return data != null && data.isMap() && data.asMap().has("volumetric");
         }
         catch (Exception e)

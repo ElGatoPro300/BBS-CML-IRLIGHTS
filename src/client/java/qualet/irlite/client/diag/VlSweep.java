@@ -1,14 +1,12 @@
 package qualet.irlite.client.diag;
 
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.light.LightCollector;
-
-import org.qualet.irl.light.VlGlobalsBuffer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+
+import org.qualet.irl.light.VlGlobalsBuffer;
+import qualet.irlite.IrliteConfig;
 
 /**
  * Level-2 differential sweep of the VL march (deferred2) cost, unlocked by the
@@ -88,6 +86,14 @@ final class VlSweep
 
     private VlSweep()
     {}
+
+    static void reset()
+    {
+        phase = Phase.WAIT_VL;
+        vlSeen = waitLogged = false;
+        warmupStart = runStart = currentFrame = lastSampleFrame = 0L;
+        for (List<Long> list : samples) list.clear();
+    }
 
     private static final class Config
     {
@@ -215,7 +221,7 @@ final class VlSweep
         int userFlags = (IrliteConfig.vlShadowsLive() ? 1 : 0) | (IrliteConfig.vlNoiseLive() ? 2 : 0)
             | (IrliteConfig.vlBlueNoise() ? 4 : 0) | (IrliteConfig.vlDitherTemporal() ? 8 : 0)
             | (IrliteConfig.vlClusterCull() ? 16 : 0) | (IrliteConfig.vlShadowHiz() ? 32 : 0)
-            | (LightCollector.VL_BILATERAL ? 64 : 0);
+            | (qualet.irlite.client.light.LightCollector.VL_BILATERAL ? 64 : 0);
         VlGlobalsBuffer.set(
             IrliteConfig.vlIntensity(),
             IrliteConfig.vlMaxDist(),

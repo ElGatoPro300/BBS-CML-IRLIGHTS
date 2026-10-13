@@ -1,20 +1,22 @@
 package qualet.irlite.client;
 
-import qualet.irlite.client.compat.IrliteCalCompat;
-import qualet.irlite.client.diag.VlProfiler;
-import qualet.irlite.client.light.cookie.CookieArray;
-import qualet.irlite.client.patcher.BbsPatcherHost;
-
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.util.Identifier;
+import org.lwjgl.opengl.GL30;
 import org.qualet.irl.light.IrlSamplers;
 import org.qualet.irl.light.shadow.IRLiteBbsCasterSource;
 import org.qualet.irl.light.shadow.ShadowBakeProbe;
 import org.qualet.irl.light.shadow.ShadowEngine;
 import org.qualet.irl.patcher.Patcher;
-
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-
-import org.lwjgl.opengl.GL30;
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.light.cookie.CookieArray;
+import qualet.irlite.client.light.ShadowResourceVersions;
+import qualet.irlite.client.patcher.BbsPatcherHost;
 
 public class IrliteClient implements ClientModInitializer {
 
@@ -32,6 +34,11 @@ public class IrliteClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register((ctx, tickDelta) -> VlProfiler.renderHud(ctx));
         ShadowEngine.installBakeProbe(new ShadowBakeProbe() {
             @Override
+            public boolean detailedTimings() {
+                return VlProfiler.detailedTimings();
+            }
+
+            @Override
             public void section(String name) {
                 VlProfiler.switchPass(name);
             }
@@ -45,14 +52,13 @@ public class IrliteClient implements ClientModInitializer {
         // Install the BBS Form/Film/Morph shadow caster source + config so the shared
         // irl-core shadow orchestration can reach this mod's per-mod pieces.
         ShadowEngine.install(new IRLiteBbsCasterSource(), IrliteShadowConfig.INSTANCE);
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+            @Override public Identifier getFabricId() { return new Identifier("irlite", "shadow_silhouettes"); }
+            @Override public void reload(ResourceManager manager) { ShadowResourceVersions.reloaded(); }
+        });
 
         // Register the per-mod gobo/cookie mask array into the shared sampler registry;
         // rebound from its 2D registration to GL_TEXTURE_2D_ARRAY at bind time.
         IrlSamplers.register("irl_cookieArray", CookieArray::getGlTextureId, GL30.GL_TEXTURE_2D_ARRAY);
-
-        if (IrliteCalCompat.isCalPresent()) {
-            IrliteCalCompat.ensureCookiesReady();
-            IrliteCalCompat.syncConfigs();
-        }
     }
 }

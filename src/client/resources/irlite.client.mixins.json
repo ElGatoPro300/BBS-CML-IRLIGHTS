@@ -5,17 +5,27 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "ExtraFormSectionMixin",
+    "FormUtilsClientMixin",
     "GameRendererLightMixin",
     "UIFilmControllerMixin",
     "UIPickableFormRendererMixin",
+    "LightKeyframeEditorMixin",
     "UISettingsOverlayPanelMixin",
     "WorldBlockChangeMixin",
     "bbs.FilmsAccessor",
+    "bbs.FormStatePlayersAccessor",
+    "bbs.ModelVaoShadowRevisionMixin",
+    "bbs.MobFormRendererAccessor",
+    "bbs.ReplaySelectionTrackMixin",
+    "bbs.TextureShadowRevisionMixin",
     "bbs.WorldBlockEntityTickersAccessor",
     "iris.CapturedRenderingStateClusterMixin",
     "iris.CompositeRendererTimerMixin",
     "iris.ProgramSamplersBuilderMixin",
-    "iris.SamplerBindingCubeArrayMixin"
+    "iris.ReplayUniformMixin",
+    "iris.SamplerBindingCubeArrayMixin",
+    "UIKeyframeSheetMixin",
+    "IRLightsCategoryIconMixin"
   ],
   "injectors": {
     "defaultRequire": 1

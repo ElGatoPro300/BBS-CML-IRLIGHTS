@@ -1,18 +1,14 @@
 package qualet.irlite.client.forms;
 
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.light.LightCollector;
-
-import org.qualet.irl.light.shadow.ShadowBakeState;
-
+import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.client.BBSShaders;
 import mchorse.bbs_mod.forms.CustomVertexConsumerProvider;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
-import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderer;
+import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.texture.Texture;
@@ -20,18 +16,16 @@ import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
-
-import net.minecraft.client.gl.ShaderProgramKeys;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
-
 import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.light.LightCollector;
+import org.qualet.irl.light.shadow.ShadowBakeState;
 
 public abstract class AbstractLightFormRenderer<T extends Form> extends FormRenderer<T>
 {
@@ -44,7 +38,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
     protected abstract Icon icon();
 
-    protected abstract void renderGuide(FormRenderingContext context, Color color);
+    protected abstract void renderGuide(FormRenderingContext context, Color color, boolean world);
 
     /** Register this light into the per-frame registry (render-path: live actors / replays). */
     protected abstract void registerLight(FormRenderingContext context);
@@ -99,7 +93,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
              * identity checks against the replay don't work here). */
             if (IrliteConfig.showGuides() || SpotGuideDrag.isFilmSelected(this.form))
             {
-                this.renderGuide(context, this.tintedColor(context));
+                this.renderGuide(context, this.tintedColor(context), true);
             }
 
             return;
@@ -107,7 +101,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
         if (editorPreview && !context.isPicking())
         {
-            this.renderGuide(context, this.tintedColor(context));
+            this.renderGuide(context, this.tintedColor(context), false);
 
             return;
         }
@@ -205,21 +199,19 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
         /* icons.png is loaded by BBS as a bare GL texture; bind its id to unit 0. */
         BBSModClient.getTextures().bindTexture(icon.texture);
-        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
 
-        // 1.21: begin() moved to Tessellator and returns the builder; per-vertex
-        // .next() is gone (vertex(...) auto-advances). Mirrors LightGuideRenderer.
-        BufferBuilder builder = Tessellator.getInstance()
-            .begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
 
         /* Alpha forced to 1 — a light with a translucent colour must still show
          * a solid icon rather than a faint/invisible one. */
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y1, z).texture(u2, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y2, z).texture(u1, v1).color(c.r, c.g, c.b, 1F);
+        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F).next();
+        builder.vertex(matrix, x2, y1, z).texture(u2, v2).color(c.r, c.g, c.b, 1F).next();
+        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F).next();
+        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F).next();
+        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F).next();
+        builder.vertex(matrix, x1, y2, z).texture(u1, v1).color(c.r, c.g, c.b, 1F).next();
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
 
@@ -246,7 +238,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
         CustomVertexConsumerProvider.hijackVertexFormat((layer) ->
         {
             this.setupTarget(context, BBSShaders.getPickerModelsProgram());
-            RenderSystem.setShader(BBSShaders.getPickerModelsProgram());
+            RenderSystem.setShader(BBSShaders::getPickerModelsProgram);
         });
 
         Draw.renderBox(context.stack, 0, 0, 0, 0.5, 0.5, 0.5, c.r, c.g, c.b);

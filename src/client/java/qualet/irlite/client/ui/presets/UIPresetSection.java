@@ -1,8 +1,5 @@
 package qualet.irlite.client.ui.presets;
 
-import qualet.irlite.IrlitePresets;
-
-import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UICirculate;
@@ -11,7 +8,9 @@ import mchorse.bbs_mod.ui.utils.UI;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+
+import qualet.irlite.IrlitePresets;
+import qualet.irlite.client.ui.IRLightsUIKeys;
 
 /** The two preset rows drawn at the top of the IRLite settings section, above
  *  the individual knobs they drive.
@@ -30,7 +29,7 @@ public final class UIPresetSection
     {
         List<UIElement> elements = new ArrayList<>();
 
-        UILabel header = UI.label(L10n.lang("irlite.ui.presets"));
+        UILabel header = UI.label(IRLightsUIKeys.PRESETS);
         header.marginTop(6);
         elements.add(header);
 
@@ -44,19 +43,15 @@ public final class UIPresetSection
             }
         });
 
-        for (String label : IrlitePresets.QUALITY_LABELS)
+        for (IKey label : IRLightsUIKeys.QUALITY_LABELS)
         {
-            quality.addLabel(L10n.lang("irlite.ui.preset." + label.toLowerCase(Locale.ROOT)));
+            quality.addLabel(label);
         }
 
         quality.setValue(IrlitePresets.quality());
         quality.w(90);
 
-        elements.add(row(
-            L10n.lang("irlite.ui.quality"),
-            quality,
-            L10n.lang("irlite.ui.quality_tooltip")
-        ));
+        elements.add(row(IRLightsUIKeys.QUALITY, quality, IRLightsUIKeys.QUALITY_HELP));
 
         UICirculate style = new UICirculate((b) ->
         {
@@ -68,19 +63,15 @@ public final class UIPresetSection
             }
         });
 
-        for (String label : IrlitePresets.STYLE_LABELS)
+        for (IKey label : IRLightsUIKeys.STYLE_LABELS)
         {
-            style.addLabel(L10n.lang("irlite.ui.preset." + label.toLowerCase(Locale.ROOT)));
+            style.addLabel(label);
         }
 
         style.setValue(IrlitePresets.style());
         style.w(90);
 
-        elements.add(row(
-            L10n.lang("irlite.ui.beam_style"),
-            style,
-            L10n.lang("irlite.ui.beam_style_tooltip")
-        ));
+        elements.add(row(IRLightsUIKeys.BEAM_STYLE, style, IRLightsUIKeys.BEAM_HELP));
 
         return elements;
     }
