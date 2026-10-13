@@ -1,21 +1,21 @@
-# CML 3.0 port (Minecraft 1.21.1)
+# CML 3.0 port (master: Minecraft 1.20.1)
 
 This branch compiles against the local CML 3.0 API, rather than the former BBS 2.x Modrinth dependency. The shared `irl-core` engine remains bundled separately.
 
 ## Host library
 
-Reference artifact: `bbs-cml-3.0-dev-1-1.21.1.jar`.
+Reference artifact on `master`: `bbs-cml-3.0-dev-1-1.20.1.jar` (built from CML's `1.20.1` branch). The `port/1.21.1` branch uses `bbs-cml-3.0-dev-1-1.21.1.jar`. The default path follows the `-Pmc` profile: `libs/bbs-cml-3.0-dev-1-<mc>.jar`.
 
-Copy the matching Minecraft 1.21.1 artifact from CML's `build/libs` into this addon's `libs`. Put its `-sources.jar` alongside it to inspect the host implementation in the IDE. These generated libraries are ignored by Git; CML is a dependency and is not embedded in the addon JAR.
+Copy the matching Minecraft artifact from CML's `build/libs` into this addon's `libs`. Put its `-sources.jar` alongside it to inspect the host implementation in the IDE. These generated libraries are ignored by Git; CML is a dependency and is not embedded in the addon JAR.
 
-An alternative location can be supplied with `-PcmlJar=<absolute path>`. The build fails with an explicit path if the host library is missing. Use Java 21.
+An alternative location can be supplied with `-PcmlJar=<absolute path>`. The build fails with an explicit path if the host library is missing. `master` targets Java 17 (any JDK 17+ can build it).
 
 ```powershell
 ./gradlew.bat build '-Ploader_version=0.19.5'
 ./gradlew.bat runClient '-Ploader_version=0.19.5' '-PrunDir=build/cml3-test'
 ```
 
-The host requires Fabric Loader 0.19.5 or newer. Runtime metadata requires CML 3.0 and Minecraft 1.21.1; this branch has not been ported to the older profiles still listed in the legacy build script.
+The host requires Fabric Loader 0.19.5 or newer. On `master`, runtime metadata requires CML 3.0 and Minecraft 1.20.1–1.20.4 (use the CML jar built for the same Minecraft version).
 
 ## Adapter changes
 
