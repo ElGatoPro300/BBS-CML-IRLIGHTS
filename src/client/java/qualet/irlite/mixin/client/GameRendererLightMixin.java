@@ -1,19 +1,17 @@
 package qualet.irlite.mixin.client;
 
-import qualet.irlite.client.compat.IrliteCalCompat;
-import qualet.irlite.client.diag.VlProfiler;
-import qualet.irlite.client.light.LightCollector;
-
-import org.qualet.irl.light.FramePipeline;
-import org.qualet.irl.light.iris.IrisShadersState;
-
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderTickCounter;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.qualet.irl.light.FramePipeline;
+import org.qualet.irl.light.iris.IrisShadersState;
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.forms.WorldLightGuideOverlay;
+import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.client.light.ReplayOutlineContext;
 
 @Mixin(GameRenderer.class)
 public class GameRendererLightMixin
@@ -21,34 +19,61 @@ public class GameRendererLightMixin
     @Inject(method = "renderWorld", at = @At("HEAD"))
     private void irlite$collectLights(RenderTickCounter tickCounter, CallbackInfo ci)
     {
-        // 1.21.1: renderWorld(RenderTickCounter) — the old (tickDelta, limitTime,
+        WorldLightGuideOverlay.beginFrame();
+        // 1.21.11: renderWorld(RenderTickCounter) — the old (tickDelta, limitTime,
         // MatrixStack) parameters are gone, so derive the partial tick here
         // (ignoreFreeze=true matches the previous always-advancing behaviour).
-        // NB: 1.21.1 still names this getTickDelta(boolean); getTickProgress is later.
         float tickDelta = tickCounter.getTickProgress(true);
+
         // Dev VL profiler (-Dirlite.profileVl=true): the shadow bake below runs
         // strictly before the Iris pass sequence, so its GL_TIME_ELAPSED bracket
         // never nests with the per-pass brackets. collect/prioritize inside
         // frame() issue no GL, so the bracket measures bake GPU work only. The
         // core-side ShadowBakeProbe (installed in IrliteClient) switches this
-        // bracket to bake-* siblings at the bakeInner seams; endPass closes
-        // whichever segment is open.
+        // bracket to bake-spot/-spot-pyr/-spot-evsm/-point/-point-pyr/
+        // -point-evsm/-tail siblings at the bakeInner seams; the endPass below
+        // closes whichever segment is open (the tail, or the head when the
+        // bake early-returned).
         VlProfiler.frameTick();
+        // Replay tags first: the light collection below resolves each light's replay lists against them.
+        ReplayOutlineContext.beginFrame();
         VlProfiler.beginPass(VlProfiler.PASS_BAKE);
         long pipelineT0 = System.nanoTime();
-        FramePipeline.frame(
-            tickDelta,
-            IrisShadersState::shadersDisabled,
-            LightCollector::collect,
-            IrliteCalCompat::resetCalAutoShadowRamp
-        );
-        VlProfiler.cpuSample("pipeline", System.nanoTime() - pipelineT0);
-        VlProfiler.endPass();
+        try
+        {
+            FramePipeline.frame(tickDelta, IrisShadersState::shadersDisabled, LightCollector::collect, () -> {});
+        }
+        catch (RuntimeException | Error e)
+        {
+            VlProfiler.invalidateFrame();
+            throw e;
+        }
+        finally
+        {
+            VlProfiler.cpuSample("pipeline", System.nanoTime() - pipelineT0);
+            VlProfiler.endPass();
+        }
+    }
+
+    /** After renderWorld returns, Iris has also finished its final colour-space pass.
+     * Draw before the HUD/BBS preview capture, with the world matrices saved at submission. */
+    @Inject(method = "render", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/render/GameRenderer;renderWorld(Lnet/minecraft/client/render/RenderTickCounter;)V",
+        shift = At.Shift.AFTER), require = 1)
+    private void irlite$drawLightGuides(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci)
+    {
+        WorldLightGuideOverlay.flush();
     }
 
     /**
-     * Deferred SSBO upload, injected just AFTER this frame's Camera update
-     * in renderWorld, still well before WorldRenderer.render / Iris activation.
+     * Deferred SSBO upload — the light buffer is made relative to the current-frame eye
+     * that the shaderpack reconstructs fragments against, not a stale camera.
+     *
+     * <p>1.21.11 moved the camera update out of renderWorld: {@code render} calls
+     * {@code updateCamera(RenderTickCounter)} BEFORE {@code renderWorld}, so the camera is
+     * already this frame's at HEAD. The upload still lands strictly after the HEAD collect —
+     * right after {@code updateCameraState(F)} — and well before WorldRenderer.render / Iris
+     * activation (same anchor as the redactor's port/1.21.11).</p>
      */
     @Inject(method = "renderWorld",
             at = @At(value = "INVOKE",

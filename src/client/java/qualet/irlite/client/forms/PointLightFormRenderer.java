@@ -1,16 +1,14 @@
 package qualet.irlite.client.forms;
 
-import qualet.irlite.client.light.IRLightPositionResolver;
-import qualet.irlite.forms.PointLightForm;
-
-import org.qualet.irl.light.LightRegistry;
-
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Color;
-
 import org.joml.Vector3d;
+import qualet.irlite.client.light.IRLightPositionResolver;
+import org.qualet.irl.light.LightRegistry;
+import qualet.irlite.client.light.LightEffectsRegistration;
+import qualet.irlite.forms.PointLightForm;
 
 public class PointLightFormRenderer extends AbstractLightFormRenderer<PointLightForm>
 {
@@ -32,9 +30,16 @@ public class PointLightFormRenderer extends AbstractLightFormRenderer<PointLight
     }
 
     @Override
-    protected void renderGuide(FormRenderingContext context, Color color)
+    protected void renderGuide(FormRenderingContext context, Color color, boolean world)
     {
-        LightGuideRenderer.renderPointLight(context.stack, color, this.form.radius.get());
+        float radius = this.form.radius.get();
+
+        if (world && WorldLightGuideOverlay.defer(context.stack, color, radius, 0F, 0F, false))
+        {
+            return;
+        }
+
+        LightGuideRenderer.renderPointLight(context.stack, color, radius);
     }
 
     @Override
@@ -51,5 +56,6 @@ public class PointLightFormRenderer extends AbstractLightFormRenderer<PointLight
             this.form.bulbSize.get(), this.form.shadows.get(),
             System.identityHashCode(this.form)
         );
+        LightEffectsRegistration.apply(this.form);
     }
 }

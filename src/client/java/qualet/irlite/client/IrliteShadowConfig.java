@@ -1,9 +1,7 @@
 package qualet.irlite.client;
 
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.compat.IrliteCalCompat;
-
 import org.qualet.irl.light.shadow.ShadowConfig;
+import qualet.irlite.IrliteConfig;
 
 /**
  * Client-side {@link ShadowConfig} adapter handed to
@@ -25,11 +23,12 @@ public final class IrliteShadowConfig
             .shadowBlocks(IrliteConfig::shadowBlocks)
             .shadowBlockRadius(IrliteConfig::shadowBlockRadius)
             .shadowPoseReach(IrliteConfig::shadowPoseReach)
+            .shadowPartialTile(IrliteConfig::shadowPartialTile)
             // Bake stays alive while EITHER surface shadows or volumetric beam
-            // shadows are on (for BBS or CAL lights) — the VL pass samples the same maps (vlC.w bit0), so
+            // shadows are on — the VL pass samples the same maps (vlC.w bit0), so
             // gating on shadowsLive() alone would blank beam shadows when a user
             // only meant to drop surface shadows.
-            .shadowsEnabled(() -> IrliteConfig.shadowsLive() || IrliteConfig.vlShadowsLive() || IrliteCalCompat.isCalShadowsEnabled())
+            .shadowsEnabled(() -> IrliteConfig.shadowsLive() || IrliteConfig.vlShadowsLive())
             .build();
 
     private IrliteShadowConfig()

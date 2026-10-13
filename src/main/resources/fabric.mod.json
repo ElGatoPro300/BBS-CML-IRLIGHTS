@@ -2,11 +2,11 @@
 	"schemaVersion": 1,
 	"id": "irlite",
 	"version": "${version}",
-	"name": "IRLite",
+	"name": "IRLights",
 	"description": "",
-	"authors": ["qualet", "ElGatoPro300"],
+	"authors": ["wemppy", "qualet"],
 	"contact": {},
-	"license": "CC-BY-ND-4.0",
+	"license": "MIT",
 	"icon": "assets/irlite/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -14,27 +14,21 @@
 		"client": ["qualet.irlite.client.IrliteClient"],
 		"main": ["qualet.irlite.Irlite"],
 		"bbs-addon": ["qualet.irlite.IrlightsAddon"],
-		"bbs-addon-client": ["qualet.irlite.client.IrlightsClientAddon"]
+		"bbs-client-addon": ["qualet.irlite.client.IrlightsClientAddon"]
 	},
 	"mixins": [
+		"irlite.mixins.json",
 		{
 			"config": "irlite.client.mixins.json",
 			"environment": "client"
 		}
 	],
-	"jars": [
-		{
-			"file": "META-INF/jars/${irl_core_jar}"
-		}
-	],
 	"depends": {
-		"fabricloader": ">=${loader_version}",
+		"fabricloader": ">=0.15.0",
 		"fabric-api": "*",
-		"bbs": "*",
+		"bbs": ">=2.7-0",
 		"minecraft": "~1.21.11",
+		"java": ">=21",
 		"irl-core": "*"
-	},
-	"suggests": {
-		"irlcal_editor": "*"
 	}
 }
