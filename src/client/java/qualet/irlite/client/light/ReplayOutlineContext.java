@@ -18,6 +18,7 @@ import org.lwjgl.opengl.GL11;
 import org.qualet.irl.light.shadow.ShadowBakeState;
 import qualet.irlite.mixin.client.bbs.FilmsAccessor;
 
+import io.netty.util.collection.IntObjectMap;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -123,13 +124,13 @@ public final class ReplayOutlineContext
         }
 
         String film = controller.film.getId();
-        Map<String, IEntity> entities = controller.getEntities();
+        IntObjectMap<IEntity> entities = controller.getEntities();
         Map<String, Integer> ids = TOKENS.computeIfAbsent(film, (k) -> new HashMap<>());
         Map<String, Integer> active = ACTIVE.computeIfAbsent(film, (k) -> new HashMap<>());
 
         for (Replay replay : controller.film.replays.getList())
         {
-            IEntity entity = entities.get(replay.getId());
+            IEntity entity = entities.get(controller.film.replays.getList().indexOf(replay));
 
             if (entity == null || !replay.enabled.get())
             {

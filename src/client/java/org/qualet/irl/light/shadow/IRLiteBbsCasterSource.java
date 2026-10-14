@@ -3,17 +3,20 @@ package org.qualet.irl.light.shadow;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
+import mchorse.bbs_mod.client.renderer.MorphRenderer;
 import mchorse.bbs_mod.cubic.ModelInstance;
 import mchorse.bbs_mod.film.BaseFilmController;
 import mchorse.bbs_mod.film.Films;
 import mchorse.bbs_mod.film.replays.Replay;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import mchorse.bbs_mod.forms.QueueDispatch;
+import mchorse.bbs_mod.client.render.FormRenderCommands;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.forms.MobForm;
 import mchorse.bbs_mod.forms.forms.ModelForm;
+import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderer;
 import mchorse.bbs_mod.morphing.Morph;
 import mchorse.bbs_mod.selectors.ISelectorOwnerProvider;
@@ -21,6 +24,10 @@ import mchorse.bbs_mod.selectors.SelectorOwner;
 import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
+import mchorse.bbs_mod.morphing.Morph;
+import mchorse.bbs_mod.selectors.ISelectorOwnerProvider;
+import mchorse.bbs_mod.selectors.SelectorOwner;
+import mchorse.bbs_mod.settings.values.core.ValueTransform;
 import mchorse.bbs_mod.ui.dashboard.UIDashboard;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.film.controller.FilmEditorController;
@@ -56,7 +63,19 @@ import qualet.irlite.forms.SpotlightForm;
 import qualet.irlite.mixin.client.bbs.FilmsAccessor;
 import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
+import io.netty.util.collection.IntObjectMap;
+
 import java.util.List;
+
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.light.BbsMobSilhouette;
+import qualet.irlite.client.light.BbsModelSilhouette;
+import qualet.irlite.client.light.BbsSilhouetteBridge;
+import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+import qualet.irlite.mixin.client.bbs.FilmsAccessor;
+import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 /**
  * The IRLite {@link ShadowCasterSource}: BBS Form/Film/Morph silhouettes — the
@@ -84,6 +103,27 @@ import java.util.List;
  */
 public final class IRLiteBbsCasterSource implements ShadowCasterSource
 {
+    private final BbsModelSilhouette silhouettes = new BbsModelSilhouette();
+    private final BbsMobSilhouette mobSilhouettes = new BbsMobSilhouette();
+
+    @Override
+    public CasterRevision revision(Object caster, int type, float tickDelta)
+    {
+        if (type != CasterType.MODEL_BLOCK || !(caster instanceof ModelBlockEntity block)) return CasterRevision.UNKNOWN;
+        try
+        {
+            return block.getProperties() != null && block.getProperties().getForm() instanceof MobForm
+                ? mobSilhouettes.sample(block, tickDelta) : silhouettes.sample(block, tickDelta);
+        }
+        catch (RuntimeException | LinkageError failure)
+        {
+            // INVARIANT 4 scoping: a probe failure (BBS drift past the audited layouts)
+            // degrades to UNKNOWN for that caster. Reported once so it never hides as
+            // "no reuse"; the self-test's AssertionError deliberately propagates.
+            BbsSilhouetteBridge.reportFailure(failure);
+            return CasterRevision.UNKNOWN;
+        }
+    }
     /** Match the light collector's camera horizon. This removes the old 72-block
      *  mismatch for co-located lamp/caster scenes; the global bounded pool remains
      *  intentionally camera-prioritized for casters beyond this horizon. */
@@ -109,6 +149,7 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
     public void collect(ClientWorld world, Vec3d camPos, float tickDelta, OccluderSink sink)
     {
         captures.clear();
+        silhouettes.beginFrame();
         double camX = camPos.x, camY = camPos.y, camZ = camPos.z;
 
         // --- Arm 1: world entities (vanilla / BBS-morph render path) ---
@@ -231,7 +272,7 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
             emitModelBlock(sink, mbe, form, t);
             collected++;
         }
-        if (DEBUG_COLLECT && collected != lastModelBlocks)
+        if (BbsModelSilhouette.DEBUG && collected != lastModelBlocks)
         {
             // -Dirlite.debugCasterRevisions: a caster that stops being collected
             // is invisible to the per-caster UNKNOWN trace, so report set changes.
@@ -241,7 +282,6 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
     }
 
     private static int lastModelBlocks = -1;
-    private static final boolean DEBUG_COLLECT = Boolean.getBoolean("irlite.debugCasterRevisions");
 
     private static void collectFilmReplays(double camX, double camY, double camZ, float tickDelta, OccluderSink sink)
     {
@@ -279,7 +319,7 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
             }
 
             // BBS 2.6 keys the film's entities by the replay's stable id, not its list index.
-            java.util.Map<String, IEntity> entities = ctrl.getEntities();
+            IntObjectMap<IEntity> entities = ctrl.getEntities();
             for (int rid = 0; rid < replays.size(); rid++)
             {
                 Replay replay = replays.get(rid);
@@ -288,7 +328,7 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
                     // Skip actor replays — real actors come via the entity arm.
                     continue;
                 }
-                IEntity ent = entities.get(replay.getId());
+                IEntity ent = entities.get(rid);
                 if (ent == null)
                 {
                     continue;
@@ -904,8 +944,9 @@ public final class IRLiteBbsCasterSource implements ShadowCasterSource
         state.outlineColor = 0;
 
         // Light-relative bake: anchor-relative offset, subtracted in double.
-        manager.render(state, QueueDispatch.cameraState(), state.x - ox, state.y - oy, state.z - oz, matrices, QueueDispatch.queue());
-        QueueDispatch.flush();
+        final double fx = state.x - ox, fy = state.y - oy, fz = state.z - oz;
+        FormRenderCommands.get().render(queue ->
+            manager.render(state, new net.minecraft.client.render.state.CameraRenderState(), fx, fy, fz, matrices, queue));
         FormUtilsClient.getProvider().draw();
     }
 

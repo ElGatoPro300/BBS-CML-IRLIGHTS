@@ -5,8 +5,8 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import mchorse.bbs_mod.client.render.picker.BBSPickerRenderer;
 import mchorse.bbs_mod.graphics.Draw;
+import mchorse.bbs_mod.ui.utils.StencilFormFramebuffer;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Color;
 import net.minecraft.client.gl.RenderPipelines;
@@ -107,7 +107,7 @@ final class LightGuideRenderer
         // Blended, no depth test — the guide reads through the model, as before.
         if (!WorldLightGuideOverlay.draw(builder))
         {
-            Draw.flushTrianglesNoDepth(builder);
+            Draw.flush(builder, Draw.getPositionColorNoDepthLayer());
         }
     }
 
@@ -271,11 +271,16 @@ final class LightGuideRenderer
      */
     static void flushStencil(BufferBuilder builder)
     {
-        BuiltBuffer built = builder.endNullable();
-
-        if (built != null)
+        if (StencilFormFramebuffer.isPickPassActive())
         {
-            BBSPickerRenderer.drawColorId(STENCIL_PIPELINE, built, RenderSystem.getModelViewMatrix());
+            Draw.flush(builder, Draw.getPositionColorNoDepthLayer());
+        }
+        else
+        {
+            try (BuiltBuffer discarded = builder.endNullable())
+            {
+                // outside a picking pass the ids must never reach the visible framebuffer
+            }
         }
     }
 

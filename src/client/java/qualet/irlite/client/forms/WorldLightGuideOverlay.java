@@ -59,9 +59,9 @@ public final class WorldLightGuideOverlay
 
     static boolean defer(MatrixStack stack, Color color, float range, float outer, float inner, boolean spot)
     {
-        // Framebuffer-form children keep ENTITY/MODEL_BLOCK context types, but their
-        // geometry belongs to that offscreen texture, not to the world overlay.
-        if (!BBSRendering.isIrisWorldForms())
+        // A loaded pack alone is insufficient: nested framebuffer forms keep their
+        // world context type but suspend the Iris override while drawing offscreen.
+        if (!BBSRendering.isIrisWorldShadersEnabled())
         {
             return false;
         }

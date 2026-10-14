@@ -199,33 +199,12 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
         Matrix4f matrix = context.stack.peek().getPositionMatrix();
 
-        BBSModClient.getTextures().bindTexture(texture);
-        RenderLayer layer = BBSShaders.getBoundBillboardLayer();
+        Color tint = new Color(c.r, c.g, c.b, 1F);
 
-        BufferBuilder builder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
-
-        /* Alpha forced to 1 — a light with a translucent colour must still show
-         * a solid icon rather than a faint/invisible one. Front, then back. */
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y1, z).texture(u2, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y2, z).texture(u1, v1).color(c.r, c.g, c.b, 1F);
-
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y1, z).texture(u2, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y2, z).texture(u1, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-
-        BuiltBuffer built = builder.endNullable();
-
-        if (built != null)
-        {
-            layer.draw(built);
-        }
+        /* Alpha forced to 1 — a light with a translucent colour must still show a solid
+         * icon. v is flipped: the quad is built bottom-up. */
+        Draw.texturedQuad(context.stack, BBSShaders.imageOverlayPipeline, BBSShaders.getImageOverlay(),
+            texture.id, tint.getARGBColor(), x1, y1, x2 - x1, y2 - y1, u1, v2, u2, v1);
 
         context.stack.pop();
     }
@@ -252,7 +231,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
         BufferBuilder builder = LightGuideRenderer.beginTriangles();
 
-        Draw.renderBox(builder, context.stack, 0, 0, 0, 0.5, 0.5, 0.5, id.r, id.g, id.b, 1F);
+        Draw.fillBox(builder, context.stack, 0F, 0F, 0F, 0.5F, 0.5F, 0.5F, id.r, id.g, id.b, 1F);
         LightGuideRenderer.flushStencil(builder);
 
         context.stack.pop();

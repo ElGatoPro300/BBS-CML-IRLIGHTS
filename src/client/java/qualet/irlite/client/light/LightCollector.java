@@ -21,6 +21,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import io.netty.util.collection.IntObjectMap;
 import net.minecraft.world.chunk.BlockEntityTickInvoker;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -40,6 +41,17 @@ import qualet.irlite.IrliteConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.qualet.irl.light.LightBuffer;
+import org.qualet.irl.light.LightMath;
+import org.qualet.irl.light.LightRegistry;
+import org.qualet.irl.light.VlGlobalsBuffer;
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.light.cookie.CookieArray;
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 /**
  * Walks the loaded ModelBlockEntity forms each frame in pure world coordinates
@@ -442,7 +454,7 @@ public final class LightCollector
         }
 
         // BBS 2.6 keys the film's entities by the replay's stable id, not its list index.
-        java.util.Map<String, IEntity> entities = editor.getEntities();
+        IntObjectMap<IEntity> entities = editor.getEntities();
         for (int replayId = 0; replayId < replays.size(); replayId++)
         {
             Replay replay = replays.get(replayId);
@@ -451,7 +463,7 @@ public final class LightCollector
                 continue;
             }
 
-            IEntity ent = entities.get(replay.getId());
+            IEntity ent = entities.get(replayId);
             if (ent == null)
             {
                 continue;

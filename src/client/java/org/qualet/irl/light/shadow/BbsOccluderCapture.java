@@ -2,23 +2,20 @@ package org.qualet.irl.light.shadow;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
-import mchorse.bbs_mod.forms.FormRenderCapture;
-import mchorse.bbs_mod.forms.FormTranslucentQueue;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.render.RenderLayer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.List;
-import java.util.Map;
 
 /**
  * MC 1.21.11 occluder capture for the BBS caster source. irl-core's 1.21.11 line
  * rasterizes casters from POSITION triangles ({@link RawOccluderBatch}) instead of an
  * Immediate draw, so a caster is drawn through BBS's own immediate pipeline under a
- * {@link FormRenderCapture} session: every BBS emitter (cubic models, BOBJ meshes, the
+ * {@link OccluderCaptureSession} session: every BBS emitter (cubic models, BOBJ meshes, the
  * buffered provider behind blocks/items/vanilla mob queues) ends at
- * {@code RenderLayer#draw(BuiltBuffer)}, which BBS's RenderLayerMixin turns into a CPU
+ * {@code RenderLayer#draw(BuiltBuffer)}, which RenderLayerCaptureMixin turns into a CPU
  * copy while the session is open. The positions come out exactly as the draw's
  * MatrixStack left them, so a caster drawn on an anchor-relative stack yields
  * anchor-relative triangles.
@@ -45,26 +42,22 @@ final class BbsOccluderCapture
     /** Run {@code draw} under a capture session and return its triangles (stride 3). */
     static float[] capture(Runnable draw)
     {
-        boolean queueWasActive = FormTranslucentQueue.suspend();
-        FormRenderCapture.Suspended outer = FormRenderCapture.suspend();
-        Map<RenderLayer, List<FormRenderCapture.Captured>> captured;
+        List<OccluderCaptureSession.Captured> outer = OccluderCaptureSession.begin();
+        List<OccluderCaptureSession.Captured> captured;
 
-        FormRenderCapture.begin();
         try
         {
             draw.run();
         }
         finally
         {
-            captured = FormRenderCapture.end();
-            FormRenderCapture.restore(outer);
-            FormTranslucentQueue.restore(queueWasActive);
+            captured = OccluderCaptureSession.end(outer);
         }
 
         return triangles(captured);
     }
 
-    private static float[] triangles(Map<RenderLayer, List<FormRenderCapture.Captured>> captured)
+    private static float[] triangles(List<OccluderCaptureSession.Captured> captured)
     {
         if (captured == null || captured.isEmpty())
         {
@@ -72,12 +65,9 @@ final class BbsOccluderCapture
         }
 
         int w = 0;
-        for (List<FormRenderCapture.Captured> list : captured.values())
+        for (OccluderCaptureSession.Captured item : captured)
         {
-            for (int i = 0, n = list.size(); i < n; i++)
-            {
-                w = append(list.get(i), w);
-            }
+            w = append(item, w);
         }
 
         if (w == 0)
@@ -92,7 +82,7 @@ final class BbsOccluderCapture
     /** Append one captured buffer's triangles at {@code w}; returns the new write cursor.
      *  QUADS split into two triangles, TRIANGLES pass through; lines and other modes
      *  carry no silhouette and are skipped. */
-    private static int append(FormRenderCapture.Captured captured, int w)
+    private static int append(OccluderCaptureSession.Captured captured, int w)
     {
         BuiltBuffer.DrawParameters params = captured.params();
         VertexFormat.DrawMode mode = params.mode();

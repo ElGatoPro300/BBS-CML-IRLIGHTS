@@ -1,34 +1,52 @@
 {
-	"schemaVersion": 1,
-	"id": "irlite",
-	"version": "${version}",
-	"name": "IRLights",
-	"description": "",
-	"authors": ["wemppy", "qualet"],
-	"contact": {},
-	"license": "MIT",
-	"icon": "assets/irlite/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"fabric-datagen": ["qualet.irlite.client.IrliteDataGenerator"],
-		"client": ["qualet.irlite.client.IrliteClient"],
-		"main": ["qualet.irlite.Irlite"],
-		"bbs-addon": ["qualet.irlite.IrlightsAddon"],
-		"bbs-client-addon": ["qualet.irlite.client.IrlightsClientAddon"]
-	},
-	"mixins": [
-		"irlite.mixins.json",
-		{
-			"config": "irlite.client.mixins.json",
-			"environment": "client"
-		}
-	],
-	"depends": {
-		"fabricloader": ">=0.15.0",
-		"fabric-api": "*",
-		"bbs": ">=2.7-0",
-		"minecraft": "~1.21.11",
-		"java": ">=21",
-		"irl-core": "*"
-	}
+  "schemaVersion": 1,
+  "id": "irlite",
+  "version": "${version}",
+  "name": "IRLights",
+  "description": "",
+  "authors": [
+    "wemppy",
+    "qualet"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/irlite/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "qualet.irlite.client.IrliteDataGenerator"
+    ],
+    "client": [
+      "qualet.irlite.client.IrliteClient"
+    ],
+    "main": [
+      "qualet.irlite.Irlite"
+    ],
+    "bbs-addon": [
+      "qualet.irlite.IrlightsAddon"
+    ],
+    "bbs-client-addon": [
+      "qualet.irlite.client.IrlightsClientAddon"
+    ]
+  },
+  "mixins": [
+    "irlite.mixins.json",
+    {
+      "config": "irlite.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "jars": [
+    {
+      "file": "META-INF/jars/${irl_core_jar}"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "fabric-api": "*",
+    "bbs": ">=3.0-0",
+    "minecraft": "~1.21.11",
+    "irl-core": "*",
+    "java": ">=21"
+  }
 }
