@@ -121,6 +121,7 @@ bin/
 # Reference sources
 sources/
 shaders/
+libs/
 
 # Third-party shaderpack workspace (pristine Original/ + working Modification/ copies) — not for publication
 Shadres/
