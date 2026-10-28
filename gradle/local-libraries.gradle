@@ -1,0 +1,76 @@
+import groovy.json.JsonSlurper
+import java.util.jar.Manifest
+import java.util.zip.ZipFile
+
+/* Resolve only the two host libraries for this source branch. Never load a mixed fileTree. */
+def libraryRoot = file(providers.gradleProperty('libDir').getOrElse('lib'))
+def libraryFolder = new File(libraryRoot, project.minecraft_version)
+def inspect = { File jar ->
+    new ZipFile(jar).withCloseable { zip ->
+        def metadata = zip.getEntry('fabric.mod.json')
+        if (metadata == null) {
+            throw new GradleException("Missing fabric.mod.json in ${jar}")
+        }
+        def mod = zip.getInputStream(metadata).withCloseable { stream -> new JsonSlurper().parse(stream) }
+        def manifestEntry = zip.getEntry('META-INF/MANIFEST.MF')
+        def attributes = manifestEntry == null ? new java.util.jar.Attributes() : zip.getInputStream(manifestEntry).withCloseable { stream ->
+            new Manifest(stream).mainAttributes
+        }
+        [file: jar, id: mod.id, version: mod.version, minecraft: attributes.getValue('Fabric-Minecraft-Version'),
+            namespace: attributes.getValue('Fabric-Mapping-Namespace')]
+    }
+}
+def select = { String id, String override ->
+    def supplied = providers.gradleProperty(override).orNull
+    def candidates = supplied == null ? (libraryFolder.listFiles()?.findAll {
+        it.isFile() && it.name.endsWith('.jar') && !it.name.endsWith('-sources.jar') && !it.name.endsWith('-dev.jar')
+    } ?: []) : [file(supplied)]
+    def entries = candidates.collect { jar ->
+        if (!jar.isFile()) throw new GradleException("Local library does not exist: ${jar}")
+        inspect(jar)
+    }.findAll { it.id == id }
+    if (entries.size() != 1) {
+        throw new GradleException("Expected one '${id}' JAR for Minecraft ${project.minecraft_version} in ${libraryFolder}; found ${entries.size()}. Use -P${override}=<matching remapped jar> to override.")
+    }
+    def entry = entries.first()
+    if (entry.minecraft != project.minecraft_version) {
+        throw new GradleException("Wrong Minecraft library: ${entry.file.name} was built for ${entry.minecraft ?: 'an unknown version'}, expected ${project.minecraft_version}.")
+    }
+    if (entry.namespace != 'intermediary') {
+        throw new GradleException("Local library must be a remapped intermediary JAR: ${entry.file} (namespace ${entry.namespace ?: 'unknown'}).")
+    }
+    entry
+}
+def cml = select('bbs', 'cmlJar')
+def core = select('irl-core', 'coreJar')
+if (!(core.version == project.irl_core_version || core.version.startsWith(project.irl_core_version + '-'))) {
+    throw new GradleException("Expected IRL Core ${project.irl_core_version}, found ${core.version} in ${core.file}")
+}
+ext.localCmlJar = cml.file
+ext.localCoreJar = core.file
+ext.localCoreCoordinate = "local.irlights:${core.file.name.substring(0, core.file.name.length() - 4)}:${core.version}"
+
+/* A local Ivy module gives Loom the module capability required for nested JARs. */
+repositories {
+    exclusiveContent {
+        forRepository {
+            ivy {
+                name = 'localIrlCore'
+                url = core.file.parentFile.toURI()
+                patternLayout { artifact '[artifact].[ext]' }
+                metadataSources { artifact() }
+            }
+        }
+        filter { includeGroup 'local.irlights' }
+    }
+}
+
+tasks.register('verifyLocalLibraries') {
+    group = 'verification'
+    description = 'Show the exact local CML and Core libraries selected for this Minecraft version.'
+    inputs.files(cml.file, core.file)
+    doLast {
+        logger.lifecycle("Minecraft ${project.minecraft_version}: CML ${cml.version} -> ${cml.file}")
+        logger.lifecycle("Minecraft ${project.minecraft_version}: Core ${core.version} -> ${core.file}")
+    }
+}

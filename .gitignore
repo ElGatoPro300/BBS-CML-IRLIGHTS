@@ -135,3 +135,6 @@ Shadres/
 /memory/
 /.claude/
 /CLAUDE.md
+
+# Machine-local development client JVM
+/gradle/local-runtime.properties

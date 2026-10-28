@@ -1,21 +1,22 @@
-# CML 3.0 port (master: Minecraft 1.20.1)
+# CML 3.0 local build environment
 
-This branch compiles against the local CML 3.0 API, rather than the former BBS 2.x Modrinth dependency. The shared `irl-core` engine remains bundled separately.
+Use the matching source branch: `master` for Minecraft 1.21.1, `1.20.4` for 1.20.4, and `1.20.1` for 1.20.1. The Minecraft, Yarn and Fabric versions come from that branch's `gradle.properties`; Sodium, Iris and the Java release follow the same target.
 
-## Host library
+## Host libraries
 
-Reference artifact on `master`: `bbs-cml-3.0-dev-1-1.20.1.jar` (built from CML's `1.20.1` branch). The `port/1.21.1` branch uses `bbs-cml-3.0-dev-1-1.21.1.jar`. The default path follows the `-Pmc` profile: `libs/bbs-cml-3.0-dev-1-<mc>.jar`.
+Place one remapped CML JAR and one remapped IRL Core JAR in `lib/<minecraft_version>/`. See [the library instructions](../lib/README.md). The build validates each mod ID and its exact `Fabric-Minecraft-Version` manifest attribute, so JARs for other Minecraft versions cannot be selected accidentally.
 
-Copy the matching Minecraft artifact from CML's `build/libs` into this addon's `libs`. Put its `-sources.jar` alongside it to inspect the host implementation in the IDE. These generated libraries are ignored by Git; CML is a dependency and is not embedded in the addon JAR.
-
-An alternative location can be supplied with `-PcmlJar=<absolute path>`. The build fails with an explicit path if the host library is missing. `master` targets Java 17 (any JDK 17+ can build it).
+Core is consumed through a local Ivy module and embedded with Loom `include`. CML is a separate required runtime mod and is never embedded. Generated binary libraries are ignored by Git. Maven Local is not required.
 
 ```powershell
-./gradlew.bat build '-Ploader_version=0.19.5'
-./gradlew.bat runClient '-Ploader_version=0.19.5' '-PrunDir=build/cml3-test'
+./gradlew.bat verifyLocalLibraries
+./gradlew.bat build
+./gradlew.bat runClient '-PrunDir=build/dev-run'
 ```
 
-The host requires Fabric Loader 0.19.5 or newer. On `master`, runtime metadata requires CML 3.0 and Minecraft 1.20.1–1.20.4 (use the CML jar built for the same Minecraft version).
+`-PlibDir=<absolute library folder>` shares `lib` across working trees. `-PcmlJar=<path>` and `-PcoreJar=<path>` override individual libraries while preserving validation. `-Pmc=<version>` can confirm a branch's target; a mismatched source branch is rejected instead of silently mixing mappings.
+
+The Core `main` sources support `build -Pmc=1.20.1` and `build -Pmc=1.20.4`, with distinct mapping-specific output JARs. Use the Core `1.21.1` branch for 1.21.1. A legacy Core file named `1.20.jar` was compiled for 1.20.4 and must not be reused for 1.20.1.
 
 ## Adapter changes
 

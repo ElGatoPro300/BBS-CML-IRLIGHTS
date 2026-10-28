@@ -1,15 +1,7 @@
 pluginManagement {
     repositories {
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
         gradlePluginPortal()
     }
 }
-
-// Shared BBS-free engine (light SSBO + .irlights patcher + shadow orchestration) is now
-// a per-version Loom module, published to mavenLocal and consumed via
-// modClientImplementation (see build.gradle). Run `gradlew publishToMavenLocal` in
-// ../irl-core before building this mod. The old Gradle composite build (includeBuild)
-// no longer works now that core carries MC-typed shadow code needing a Loom remap.
+// CML and Core are selected from lib/<minecraft_version> by gradle/local-libraries.gradle.

@@ -37,17 +37,12 @@
       "environment": "client"
     }
   ],
-  "jars": [
-    {
-      "file": "META-INF/jars/${irl_core_jar}"
-    }
-  ],
   "depends": {
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
     "bbs": ">=3.0-0",
-    "minecraft": "~1.21.1",
+    "minecraft": "=${minecraft_version}",
     "irl-core": "*",
-    "java": ">=21"
+    "java": ">=${java_version}"
   }
 }
