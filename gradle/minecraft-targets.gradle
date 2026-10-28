@@ -1,0 +1,18 @@
+import groovy.json.JsonSlurper
+
+/* One feature implementation; only audited engine boundaries vary per target. */
+def targets = new JsonSlurper().parse(file('gradle/minecraft-targets.json'))
+def selected = providers.gradleProperty('mc').getOrElse(project.minecraft_version)
+def target = targets[selected]
+if (target == null || target.status != 'available') {
+    throw new GradleException("Minecraft ${selected} is not available: ${target?.reason ?: 'unknown target'}. See gradle/minecraft-targets.json.")
+}
+ext.minecraft_version = selected
+ext.yarn_mappings = target.mappings
+ext.loader_version = target.loader
+ext.fabric_version = target.fabric
+ext.minecraftTarget = target
+layout.buildDirectory = file("build/targets/${selected}")
+/* Project property (not a JVM system property): prevents Loom upgrading the
+ * 1.20.1 LWJGL runtime based on the newer JVM used to run Gradle. */
+ext.set('fabric.loom.runtimeJavaCompatibilityVersion', target.java.toString())

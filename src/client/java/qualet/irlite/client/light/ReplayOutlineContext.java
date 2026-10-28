@@ -1,5 +1,6 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.client.runtime.ClientRuntime;
 import qualet.irlite.mixin.client.bbs.FilmsAccessor;
 
 import org.qualet.irl.light.shadow.ShadowBakeState;
@@ -26,10 +27,6 @@ import org.lwjgl.opengl.GL11;
 
 import io.netty.util.collection.IntObjectMap;
 
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.Map;
-
 /**
  * Which replay is being drawn right now, as a small integer the shader can read.
  *
@@ -52,40 +49,21 @@ import java.util.Map;
  */
 public final class ReplayOutlineContext
 {
-    /** Entities drawn this frame -> their token. Identity: an IEntity is not a value. */
-    private static final IdentityHashMap<IEntity, Integer> ENTITIES = new IdentityHashMap<>();
-    /** Runtime root forms -> replay token, for parts with a private render entity. */
-    private static final IdentityHashMap<Form, Integer> FORMS = new IdentityHashMap<>();
-    /** Tokens ever handed out in this world: film id -> replay id -> token. */
-    private static final Map<String, Map<String, Integer>> TOKENS = new HashMap<>();
-    /** Tokens of the replays that actually have an entity this frame. */
-    private static final Map<String, Map<String, Integer>> ACTIVE = new HashMap<>();
-
-    /** Tokens ride a float render target, so they must stay exactly representable. */
-    private static final int MAX_TOKEN = 1 << 24;
-
-    private static Object world;
-    private static int nextId = 1;
-    private static int currentId;
-    private static Runnable listener;
-
-    /** Lets Iris re-upload the uniform only when the tag actually changes. */
-    public static final ValueUpdateNotifier NOTIFIER = (value) -> listener = value;
+    /** Iris uniform updates use the session-owned draw scope. */
+    public static final ValueUpdateNotifier NOTIFIER = value -> ClientRuntime.get().replays().listener(value);
 
     private ReplayOutlineContext()
     {}
 
     public static int currentId()
     {
-        return currentId;
+        return ClientRuntime.get().replays().currentId();
     }
 
     /** The token of {@code replay} in {@code film} this frame, or 0 when it has no entity. */
     public static int resolve(String film, String replay)
     {
-        Map<String, Integer> ids = ACTIVE.get(film);
-
-        return ids == null ? 0 : ids.getOrDefault(replay, 0);
+        return ClientRuntime.get().replays().resolve(film, replay);
     }
 
     /** Once per frame, before any form renders: re-tag the film entities. */
@@ -93,17 +71,7 @@ public final class ReplayOutlineContext
     {
         Object now = MinecraftClient.getInstance().world;
 
-        if (world != now)
-        {
-            world = now;
-            TOKENS.clear();
-            nextId = 1;
-        }
-
-        ENTITIES.clear();
-        FORMS.clear();
-        ACTIVE.clear();
-        set(0);
+        ClientRuntime.get().replays().beginFrame(now);
 
         if (now == null)
         {
@@ -132,8 +100,6 @@ public final class ReplayOutlineContext
 
         String film = controller.film.getId();
         IntObjectMap<IEntity> entities = controller.getEntities();
-        Map<String, Integer> ids = TOKENS.computeIfAbsent(film, (k) -> new HashMap<>());
-        Map<String, Integer> active = ACTIVE.computeIfAbsent(film, (k) -> new HashMap<>());
 
         for (Replay replay : controller.film.replays.getList())
         {
@@ -149,26 +115,14 @@ public final class ReplayOutlineContext
                 continue;
             }
 
-            int token = ids.computeIfAbsent(replay.getId(), (k) -> nextId++);
-
-            if (token >= MAX_TOKEN)
-            {
-                throw new IllegalStateException("IRLights: replay tag precision exhausted (" + token + ")");
-            }
-
-            ENTITIES.put(entity, token);
-            if (entity.getForm() != null)
-            {
-                FORMS.put(entity.getForm(), token);
-            }
-            active.put(replay.getId(), token);
+            ClientRuntime.get().replays().register(film, replay.getId(), entity, entity.getForm());
         }
     }
 
     /** Resolve ownership from the actual form tree, never from the preceding draw. */
     static int renderId(Form form, IEntity entity)
     {
-        Integer token = ENTITIES.get(entity);
+        Integer token = ClientRuntime.get().replays().entity(entity);
 
         if (token != null)
         {
@@ -177,7 +131,7 @@ public final class ReplayOutlineContext
 
         for (Form owner = form; owner != null; owner = owner.getParentForm())
         {
-            token = FORMS.get(owner);
+            token = ClientRuntime.get().replays().form(owner);
 
             if (token != null)
             {
@@ -190,43 +144,13 @@ public final class ReplayOutlineContext
 
     private static void set(int id)
     {
-        if (id == currentId)
-        {
-            return;
-        }
-
-        currentId = id;
-
-        if (listener != null)
-        {
-            listener.run();
-        }
+        ClientRuntime.get().replays().set(id);
     }
 
     /** Retain replay ownership when CML postpones geometry until a later render pass. */
     public static Runnable captureDeferred(Runnable draw)
     {
-        if (draw == null)
-        {
-            return null;
-        }
-
-        int captured = currentId;
-
-        return () ->
-        {
-            int previous = currentId;
-            set(captured);
-
-            try
-            {
-                draw.run();
-            }
-            finally
-            {
-                set(previous);
-            }
-        };
+        return ClientRuntime.get().replays().capture(draw);
     }
 
     /**
@@ -235,7 +159,7 @@ public final class ReplayOutlineContext
      */
     public static void render(FormRenderer<?> renderer, FormRenderingContext context)
     {
-        int previous = currentId;
+        int previous = currentId();
         boolean untagged = context.ui || context.isPicking() || BBSRendering.isIrisShadowPass() || ShadowBakeState.isBaking();
         int id = untagged ? 0 : renderId(renderer.getForm(), context.entity);
 

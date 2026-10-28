@@ -1,5 +1,7 @@
 package qualet.irlite.client.forms;
 
+import qualet.irlite.platform.RenderApi;
+
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.utils.colors.Color;
 
@@ -28,17 +30,17 @@ public final class WorldLightGuideOverlay
                          Color color, float range, float outer, float inner, boolean spot)
     {}
 
-    private static final List<Guide> pending = new ArrayList<>();
+    private final List<Guide> pending = new ArrayList<>();
 
-    private WorldLightGuideOverlay()
+    public WorldLightGuideOverlay()
     {}
 
-    public static void beginFrame()
+    public void beginFrame()
     {
         pending.clear();
     }
 
-    static boolean defer(MatrixStack stack, Color color, float range, float outer, float inner, boolean spot)
+    boolean defer(MatrixStack stack, Color color, float range, float outer, float inner, boolean spot)
     {
         // A loaded pack alone is insufficient: nested framebuffer forms keep their
         // world context type but suspend the Iris override while drawing offscreen.
@@ -54,9 +56,9 @@ public final class WorldLightGuideOverlay
         return true;
     }
 
-    public static void flush()
+    public void flush()
     {
-        if (pending.isEmpty())
+        if (this.pending.isEmpty())
         {
             return;
         }
@@ -78,18 +80,16 @@ public final class WorldLightGuideOverlay
         int oldDstRgb = GL11.glGetInteger(GL14.GL_BLEND_DST_RGB);
         int oldSrcAlpha = GL11.glGetInteger(GL14.GL_BLEND_SRC_ALPHA);
         int oldDstAlpha = GL11.glGetInteger(GL14.GL_BLEND_DST_ALPHA);
-        var modelView = RenderSystem.getModelViewStack();
 
-        modelView.pushMatrix();
+        RenderApi.pushModelView();
         try
         {
             MinecraftClient.getInstance().getFramebuffer().beginWrite(true);
             RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
 
-            for (Guide guide : pending)
+            for (Guide guide : this.pending)
             {
-                modelView.set(guide.modelView());
-                RenderSystem.applyModelViewMatrix();
+                RenderApi.modelView(guide.modelView());
                 RenderSystem.setProjectionMatrix(guide.projection(), VertexSorter.BY_Z);
                 MatrixStack stack = new MatrixStack();
                 stack.peek().getPositionMatrix().set(guide.pose());
@@ -107,12 +107,11 @@ public final class WorldLightGuideOverlay
         finally
         {
             pending.clear();
-            modelView.popMatrix();
+            RenderApi.popModelView();
             // The applied matrix can differ from the stack top (BBS's UI does this).
-            modelView.pushMatrix();
-            modelView.set(oldModelView);
-            RenderSystem.applyModelViewMatrix();
-            modelView.popMatrix();
+            RenderApi.pushModelView();
+            RenderApi.modelView(oldModelView);
+            RenderApi.popModelView();
             RenderSystem.setProjectionMatrix(oldProjection, oldSorting);
             RenderSystem.setShader(() -> oldShader);
             RenderSystem.setShaderColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);

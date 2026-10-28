@@ -52,7 +52,7 @@ final class VlSweep
     private static final int BIT_CULL = 16;
     private static final int BIT_HIZ = 32;
 
-    private static final Config[] CONFIGS = {
+    private final Config[] CONFIGS = {
         new Config("baseline (all on)", ~0, false, false),
         new Config("shadows OFF", ~BIT_SHADOWS, false, false),
         new Config("noise OFF", ~BIT_NOISE, false, false),
@@ -67,33 +67,32 @@ final class VlSweep
         WAIT_VL, WARMUP, RUN, DONE
     }
 
-    private static Phase phase = Phase.WAIT_VL;
-    private static boolean vlSeen;
-    private static boolean waitLogged;
-    private static long warmupStart;
-    private static long runStart;
-    private static long currentFrame;
-    private static long lastSampleFrame;
+    private Phase phase = Phase.WAIT_VL;
+    private boolean vlSeen;
+    private boolean waitLogged;
+    private long warmupStart;
+    private long runStart;
+    private long currentFrame;
+    private long lastSampleFrame;
 
-    private static final List<List<Long>> samples = new ArrayList<>();
+    private final List<List<Long>> samples = new ArrayList<>();
 
-    static
     {
-        for (int i = 0; i < CONFIGS.length; i++)
+        for (int i = 0; i < this.CONFIGS.length; i++)
         {
             samples.add(new ArrayList<>());
         }
     }
 
-    private VlSweep()
+    VlSweep()
     {}
 
-    static void reset()
+    void reset()
     {
         phase = Phase.WAIT_VL;
-        vlSeen = waitLogged = false;
-        warmupStart = runStart = currentFrame = lastSampleFrame = 0L;
-        for (List<Long> list : samples) list.clear();
+        vlSeen = this.waitLogged = false;
+        warmupStart = this.runStart = this.currentFrame = this.lastSampleFrame = 0L;
+        for (List<Long> list : this.samples) list.clear();
     }
 
     private static final class Config
@@ -116,19 +115,19 @@ final class VlSweep
 
     /* ---- state machine (called once per frame from VlProfiler.frameTick) --- */
 
-    static void tick(long frameNo)
+    void tick(long frameNo)
     {
         currentFrame = frameNo;
-        switch (phase)
+        switch (this.phase)
         {
             case WAIT_VL ->
             {
-                if (!waitLogged)
+                if (!this.waitLogged)
                 {
                     waitLogged = true;
                     VlProfiler.log("armed — waiting for the first " + VlProfiler.PASS_VL + " GPU sample (world + shaders + VL required)");
                 }
-                if (vlSeen)
+                if (this.vlSeen)
                 {
                     phase = Phase.WARMUP;
                     warmupStart = frameNo;
@@ -137,30 +136,30 @@ final class VlSweep
             }
             case WARMUP ->
             {
-                if (frameNo - warmupStart >= WARMUP_FRAMES)
+                if (frameNo - this.warmupStart >= WARMUP_FRAMES)
                 {
                     phase = Phase.RUN;
                     runStart = frameNo;
                     lastSampleFrame = frameNo;
-                    VlProfiler.log("sweep started: " + CONFIGS.length + " configs x " + SPAN + " frames");
-                    VlProfiler.chat("[IRLite] VL sweep started (" + CONFIGS.length + " configs, ~"
-                        + (CONFIGS.length * SPAN) + " frames) — keep the camera still");
+                    VlProfiler.log("sweep started: " + this.CONFIGS.length + " configs x " + SPAN + " frames");
+                    VlProfiler.chat("[IRLite] VL sweep started (" + this.CONFIGS.length + " configs, ~"
+                        + (this.CONFIGS.length * SPAN) + " frames) — keep the camera still");
                 }
             }
             case RUN ->
             {
-                if (frameNo - lastSampleFrame > STALL_FRAMES)
+                if (frameNo - this.lastSampleFrame > STALL_FRAMES)
                 {
                     phase = Phase.WAIT_VL;
                     vlSeen = false;
                     runStart = 0;
-                    for (List<Long> list : samples)
+                    for (List<Long> list : this.samples)
                     {
                         list.clear();
                     }
                     VlProfiler.log("VL pass lost mid-sweep — discarding partial run, re-arming");
                 }
-                else if (frameNo - runStart >= (long) CONFIGS.length * SPAN + DRAIN_GRACE)
+                else if (frameNo - this.runStart >= (long) this.CONFIGS.length * SPAN + DRAIN_GRACE)
                 {
                     phase = Phase.DONE;
                     report();
@@ -173,15 +172,15 @@ final class VlSweep
     }
 
     /** Attribution by issue-frame; -1 = not measuring (warmup/skip/grace window). */
-    private static int configIndexFor(long frame)
+    private int configIndexFor(long frame)
     {
-        if (runStart == 0 || frame < runStart)
+        if (this.runStart == 0 || frame < this.runStart)
         {
             return -1;
         }
-        long offset = frame - runStart;
+        long offset = frame - this.runStart;
         int idx = (int) (offset / SPAN);
-        if (idx >= CONFIGS.length)
+        if (idx >= this.CONFIGS.length)
         {
             return -1;
         }
@@ -189,14 +188,14 @@ final class VlSweep
     }
 
     /** VlProfiler.record: a deferred2 timer sample landed (ns), issued on {@code frame}. */
-    static void addSample(long frame, long ns)
+    void addSample(long frame, long ns)
     {
         vlSeen = true;
-        if (phase != Phase.RUN)
+        if (this.phase != Phase.RUN)
         {
             return;
         }
-        lastSampleFrame = currentFrame;
+        lastSampleFrame = this.currentFrame;
         int idx = configIndexFor(frame);
         if (idx >= 0)
         {
@@ -206,19 +205,19 @@ final class VlSweep
 
     /** Re-issues the VlGlobals push with the active config's override applied.
      *  Arg list mirrors LightCollector.collect's push — keep the two in sync. */
-    static void overrideVlGlobals()
+    void overrideVlGlobals()
     {
-        if (phase != Phase.RUN)
+        if (this.phase != Phase.RUN)
         {
             return;
         }
-        long offset = currentFrame - runStart;
+        long offset = this.currentFrame - this.runStart;
         int idx = (int) (offset / SPAN);
-        if (idx <= 0 || idx >= CONFIGS.length)
+        if (idx <= 0 || idx >= this.CONFIGS.length)
         {
             return;
         }
-        Config config = CONFIGS[idx];
+        Config config = this.CONFIGS[idx];
         int userFlags = (IrliteConfig.vlShadowsLive() ? 1 : 0) | (IrliteConfig.vlNoiseLive() ? 2 : 0)
             | (IrliteConfig.vlBlueNoise() ? 4 : 0) | (IrliteConfig.vlDitherTemporal() ? 8 : 0)
             | (IrliteConfig.vlClusterCull() ? 16 : 0) | (IrliteConfig.vlShadowHiz() ? 32 : 0)
@@ -240,23 +239,23 @@ final class VlSweep
     }
 
     /** One-line live status for the HUD; null when nothing interesting is happening. */
-    static String statusLine()
+    String statusLine()
     {
-        return switch (phase)
+        return switch (this.phase)
         {
             case WAIT_VL -> "vl-sweep: waiting for VL pass";
             case WARMUP -> String.format(Locale.ROOT, "vl-sweep: warmup %d/%d",
-                currentFrame - warmupStart, WARMUP_FRAMES);
+                currentFrame - this.warmupStart, WARMUP_FRAMES);
             case RUN ->
             {
-                long offset = currentFrame - runStart;
-                if (offset >= (long) CONFIGS.length * SPAN)
+                long offset = this.currentFrame - this.runStart;
+                if (offset >= (long) this.CONFIGS.length * SPAN)
                 {
                     yield "vl-sweep: draining";
                 }
-                int idx = Math.min((int) (offset / SPAN), CONFIGS.length - 1);
+                int idx = Math.min((int) (offset / SPAN), this.CONFIGS.length - 1);
                 yield String.format(Locale.ROOT, "vl-sweep: %d/%d %s (%d/%d)",
-                    idx + 1, CONFIGS.length, CONFIGS[idx].label, offset % SPAN, SPAN);
+                    idx + 1, this.CONFIGS.length, this.CONFIGS[idx].label, offset % SPAN, SPAN);
             }
             case DONE -> null;
         };
@@ -264,9 +263,9 @@ final class VlSweep
 
     /* ---- report ------------------------------------------------------------ */
 
-    private static double medianMs(int idx)
+    private double medianMs(int idx)
     {
-        List<Long> list = samples.get(idx);
+        List<Long> list = this.samples.get(idx);
         if (list.size() < MIN_SAMPLES)
         {
             return Double.NaN;
@@ -279,18 +278,18 @@ final class VlSweep
         return median / 1_000_000D;
     }
 
-    private static void report()
+    private void report()
     {
         double base = medianMs(0);
         List<String> lines = new ArrayList<>();
         lines.add("===== VL differential sweep — " + VlProfiler.PASS_VL + " GPU median =====");
-        for (int i = 0; i < CONFIGS.length; i++)
+        for (int i = 0; i < this.CONFIGS.length; i++)
         {
             double ms = medianMs(i);
-            int n = samples.get(i).size();
+            int n = this.samples.get(i).size();
             if (Double.isNaN(ms))
             {
-                lines.add(String.format(Locale.ROOT, "%-36s insufficient samples (n=%d)", CONFIGS[i].label, n));
+                lines.add(String.format(Locale.ROOT, "%-36s insufficient samples (n=%d)", this.CONFIGS[i].label, n));
                 continue;
             }
             String delta = "";
@@ -298,13 +297,13 @@ final class VlSweep
             {
                 // OFF-configs: base - off = what the feature costs.
                 // Hi-Z / cluster cull: off - base = what the optimization saves.
-                boolean isSkipOpt = CONFIGS[i].optimization;
+                boolean isSkipOpt = this.CONFIGS[i].optimization;
                 double d = isSkipOpt ? ms - base : base - ms;
                 String verb = isSkipOpt ? "saves" : "costs";
                 double pct = base > 0.0005 ? d / base * 100D : 0D;
                 delta = String.format(Locale.ROOT, "  -> %s %.3f ms (%.1f%%)", verb, d, pct);
             }
-            lines.add(String.format(Locale.ROOT, "%-36s %8.3f ms (n=%d)%s", CONFIGS[i].label, ms, n, delta));
+            lines.add(String.format(Locale.ROOT, "%-36s %8.3f ms (n=%d)%s", this.CONFIGS[i].label, ms, n, delta));
         }
         lines.add("user config restored; numbers are medians over ~" + (SPAN - SKIP) + " frames each");
 

@@ -1,6 +1,8 @@
 # CML 3.0 local build environment
 
-Use the matching source branch: `master` for Minecraft 1.21.1, `1.20.4` for 1.20.4, and `1.20.1` for 1.20.1. The Minecraft, Yarn and Fabric versions come from that branch's `gradle.properties`; Sodium, Iris and the Java release follow the same target.
+The refactored source tree builds Minecraft 1.20.1, 1.20.4 and 1.21.1 from the same branch. Select the target with `-Pmc=<version>`; without it, `gradle.properties` selects the default. Exact dependencies and platform families live in `gradle/minecraft-targets.json`. Existing release branches are retained, but no branch switch is required to build the available targets from this shared tree.
+
+Outputs are isolated under `build/targets/<version>/`. See [the refactor status](addon-refactor-status.md) for the boundary design and verification limits. Newer CML targets are explicitly pending until their Core and rendering dependencies and adapters are verified.
 
 ## Host libraries
 
@@ -14,7 +16,7 @@ Core is consumed through a local Ivy module and embedded with Loom `include`. CM
 ./gradlew.bat runClient '-PrunDir=build/dev-run'
 ```
 
-`-PlibDir=<absolute library folder>` shares `lib` across working trees. `-PcmlJar=<path>` and `-PcoreJar=<path>` override individual libraries while preserving validation. `-Pmc=<version>` can confirm a branch's target; a mismatched source branch is rejected instead of silently mixing mappings.
+`-PlibDir=<absolute library folder>` shares `lib` across working trees. `-PcmlJar=<path>` and `-PcoreJar=<path>` override individual libraries while preserving validation. `-Pmc=<version>` selects a manifest target with exact mappings, Java, Fabric, Iris and Sodium dependencies. Pending or unknown targets fail with a dependency explanation.
 
 The Core `main` sources support `build -Pmc=1.20.1` and `build -Pmc=1.20.4`, with distinct mapping-specific output JARs. Use the Core `1.21.1` branch for 1.21.1. A legacy Core file named `1.20.jar` was compiled for 1.20.4 and must not be reused for 1.20.1.
 

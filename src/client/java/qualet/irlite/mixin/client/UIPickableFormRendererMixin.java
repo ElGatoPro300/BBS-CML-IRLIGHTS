@@ -1,6 +1,6 @@
 package qualet.irlite.mixin.client;
 
-import qualet.irlite.client.forms.SpotGuideDrag;
+import qualet.irlite.client.runtime.ClientRuntime;
 
 import mchorse.bbs_mod.ui.forms.editors.utils.UIPickableFormRenderer;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -24,7 +24,7 @@ public abstract class UIPickableFormRendererMixin
     {
         UIPickableFormRenderer self = (UIPickableFormRenderer) (Object) this;
 
-        if (SpotGuideDrag.tryStart(self, context))
+        if (ClientRuntime.get().spotGuide().tryStart(self, context))
         {
             cir.setReturnValue(true);
         }
@@ -33,7 +33,7 @@ public abstract class UIPickableFormRendererMixin
     @Inject(method = "subMouseReleased", at = @At("HEAD"), cancellable = true)
     private void irlite$releaseGuideHandle(UIContext context, CallbackInfoReturnable<Boolean> cir)
     {
-        if (SpotGuideDrag.mouseReleased())
+        if (ClientRuntime.get().spotGuide().mouseReleased())
         {
             cir.setReturnValue(true);
         }
@@ -44,6 +44,6 @@ public abstract class UIPickableFormRendererMixin
     {
         UIPickableFormRenderer self = (UIPickableFormRenderer) (Object) this;
 
-        SpotGuideDrag.update(self, context);
+        ClientRuntime.get().spotGuide().update(self, context);
     }
 }

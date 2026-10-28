@@ -3,17 +3,8 @@ plugins {
     id 'maven-publish'
 }
 
-def requestedMc = providers.gradleProperty('mc').getOrElse(project.minecraft_version)
-if (requestedMc != project.minecraft_version) {
-    throw new GradleException("This source branch targets Minecraft ${project.minecraft_version}; use its matching branch for ${requestedMc}.")
-}
-def targets = [
-    '1.20.1': [java: 17, sodium: 'mc1.20.1-0.5.13-fabric', iris: '1.7.6+1.20.1'],
-    '1.20.4': [java: 17, sodium: 'mc1.20.4-0.5.8', iris: '1.7.2+1.20.4'],
-    '1.21.1': [java: 21, sodium: 'mc1.21.1-0.6.13-fabric', iris: '1.8.8+1.21.1-fabric']
-]
-def target = targets[project.minecraft_version]
-if (target == null) throw new GradleException("Unsupported Minecraft version: ${project.minecraft_version}")
+apply from: 'gradle/minecraft-targets.gradle'
+def target = minecraftTarget
 
 version = project.mod_version + '-' + project.minecraft_version
 group = project.maven_group
@@ -39,6 +30,11 @@ loom {
     }
 }
 
+sourceSets {
+    main.java.srcDir 'src/domain/java'
+    client.java.srcDirs "src/platform/${target.minecraftAdapter}/client/java", "src/platform/${target.irisAdapter}/client/java"
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
@@ -59,6 +55,18 @@ processResources {
     filesMatching('fabric.mod.json') { expand properties }
 }
 
+tasks.named('processClientResources') {
+    from('patches') {
+        include '*.irlights'
+        into 'assets/irlite/patches'
+    }
+    inputs.property('javaVersion', target.java)
+    filesMatching('irlite.client.mixins.json') { expand java_version: target.java }
+}
+processResources {
+    filesMatching('irlite.mixins.json') { expand java_version: target.java }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = target.java
@@ -77,8 +85,11 @@ def localRuntimeFile = file('gradle/local-runtime.properties')
 if (localRuntimeFile.isFile()) {
     localRuntimeFile.withInputStream { localRuntime.load(it) }
 }
-def runtimeHome = providers.gradleProperty('runJavaHome').orNull ?: localRuntime.getProperty('runJavaHome')
+def runtimeHome = providers.gradleProperty('runJavaHome').orNull
+    ?: localRuntime.getProperty('runJavaHome.' + project.minecraft_version)
+    ?: localRuntime.getProperty('runJavaHome')
 tasks.withType(JavaExec).configureEach {
+    systemProperty 'irlite.platform.shaderBlendMethod', target.shaderBlendMethod
     if (runtimeHome != null) {
         def javaHome = file(runtimeHome)
         executable = new File(javaHome, 'bin/java' + (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? '.exe' : ''))

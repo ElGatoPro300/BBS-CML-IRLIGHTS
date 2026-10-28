@@ -1,6 +1,7 @@
 package qualet.irlite.client.ui.replays;
 
 import qualet.irlite.client.light.ReplaySelection;
+import qualet.irlite.domain.replay.ReplaySelections;
 import qualet.irlite.forms.ValueReplaySelection;
 
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -16,7 +17,7 @@ import java.util.List;
 /** The selection and its activation travel together in the ordinary, undoable string keyframe. */
 public final class UIReplaySelectionKeyframeFactory extends UIKeyframeFactory<String>
 {
-    private static final String USE_LIGHT_SETTINGS = ReplaySelection.encode("", List.of(), ReplaySelection.Mode.INHERIT);
+    private static final String USE_LIGHT_SETTINGS = ReplaySelection.encode("", List.of(), ReplaySelections.Mode.INHERIT);
 
     public UIReplaySelectionKeyframeFactory(Keyframe<String> keyframe, UIKeyframes editor)
     {
@@ -39,11 +40,11 @@ public final class UIReplaySelectionKeyframeFactory extends UIKeyframeFactory<St
         return ReplayFilmContext.find(this);
     }
 
-    private ReplaySelection.Selection selection()
+    private ReplaySelections.Selection selection()
     {
-        ReplaySelection.Selection selection = ReplaySelection.decode(this.getDisplayValue());
+        ReplaySelections.Selection selection = ReplaySelection.decode(this.getDisplayValue());
 
-        if (selection.mode() == ReplaySelection.Mode.INHERIT)
+        if (selection.mode() == ReplaySelections.Mode.INHERIT)
         {
             UIKeyframeSheet sheet = this.editor.getGraph().getSheet(this.keyframe);
 
@@ -67,9 +68,9 @@ public final class UIReplaySelectionKeyframeFactory extends UIKeyframeFactory<St
 
         LightReplayPicker.open(this.getContext(), panel, this.selection(), (value) ->
         {
-            ReplaySelection.Selection selected = ReplaySelection.decode(value);
+            ReplaySelections.Selection selected = ReplaySelection.decode(value);
 
-            this.setValue(ReplaySelection.encode(selected.film(), selected.replays(), ReplaySelection.Mode.SELECTED));
+            this.setValue(ReplaySelection.encode(selected.film(), selected.replays(), ReplaySelections.Mode.SELECTED));
         });
     }
 }

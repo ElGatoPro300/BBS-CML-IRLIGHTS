@@ -1,5 +1,6 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.domain.replay.ReplaySelections;
 import qualet.irlite.forms.ValueReplaySelection;
 
 import mchorse.bbs_mod.forms.FormUtils;
@@ -18,7 +19,7 @@ public final class ReplaySelectionPlayback
         Keyframe<?> first = channel.get(0);
 
         return first != null && tick < first.getTick() && first.getValue() instanceof String value
-            && ReplaySelection.decode(value).mode() != ReplaySelection.Mode.LEGACY;
+            && ReplaySelection.decode(value).mode() != ReplaySelections.Mode.LEGACY;
     }
 
     public static boolean resetBeforeFirst(Form root, String track, KeyframeChannel<?> channel, float tick, float blend)

@@ -2,6 +2,8 @@ package qualet.irlite.client.forms;
 
 import qualet.irlite.IrliteConfig;
 import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.client.runtime.ClientRuntime;
+import qualet.irlite.platform.RenderApi;
 
 import org.qualet.irl.light.shadow.ShadowBakeState;
 
@@ -24,8 +26,6 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 
 import org.joml.Matrix4f;
@@ -96,7 +96,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
              * currently selected in an open film editor (marked from the film
              * stencil pass — the rendered form is a COPY of replay.form, so
              * identity checks against the replay don't work here). */
-            if (IrliteConfig.showGuides() || SpotGuideDrag.isFilmSelected(this.form))
+            if (IrliteConfig.showGuides() || ClientRuntime.get().spotGuide().isFilmSelected(this.form))
             {
                 this.renderGuide(context, this.tintedColor(context), true);
             }
@@ -134,11 +134,11 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
          * keeps rendering it with increment on), but the spotlight guides must
          * neither show nor be grabbable there. The form-editor preview path
          * (context.modelRenderer) is unaffected. */
-        boolean filmPick = entityPick && context.stencilMap.increment && SpotGuideDrag.isReplayEditorActive();
+        boolean filmPick = entityPick && context.stencilMap.increment && ClientRuntime.get().spotGuide().isReplayEditorActive();
 
         if (filmPick)
         {
-            SpotGuideDrag.markFilmSelected(this.form);
+            ClientRuntime.get().spotGuide().markFilmSelected(this.form);
         }
 
         if (filmPick || (context.modelRenderer && context.stencilMap.increment))
@@ -207,16 +207,16 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
         RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
 
 
-        BufferBuilder builder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
+        BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_TEXTURE_COLOR);
 
         /* Alpha forced to 1 — a light with a translucent colour must still show
          * a solid icon rather than a faint/invisible one. */
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y1, z).texture(u2, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y1, z).texture(u1, v2).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x2, y2, z).texture(u2, v1).color(c.r, c.g, c.b, 1F);
-        builder.vertex(matrix, x1, y2, z).texture(u1, v1).color(c.r, c.g, c.b, 1F);
+        RenderApi.textureVertex(builder, matrix, x1, y1, z, u1, v2, c.r, c.g, c.b);
+        RenderApi.textureVertex(builder, matrix, x2, y1, z, u2, v2, c.r, c.g, c.b);
+        RenderApi.textureVertex(builder, matrix, x2, y2, z, u2, v1, c.r, c.g, c.b);
+        RenderApi.textureVertex(builder, matrix, x1, y1, z, u1, v2, c.r, c.g, c.b);
+        RenderApi.textureVertex(builder, matrix, x2, y2, z, u2, v1, c.r, c.g, c.b);
+        RenderApi.textureVertex(builder, matrix, x1, y2, z, u1, v1, c.r, c.g, c.b);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
 

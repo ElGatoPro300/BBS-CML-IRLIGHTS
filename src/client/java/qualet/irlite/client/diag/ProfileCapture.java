@@ -30,11 +30,11 @@ import java.util.Map;
 public final class ProfileCapture
 {
     private static final boolean CSV = Boolean.getBoolean("irlite.profileCsv");
-    private static BufferedWriter writer;
+    private BufferedWriter writer;
 
-    private ProfileCapture() {}
+    ProfileCapture() {}
 
-    static void start(boolean detailed, boolean sweep)
+    void start(boolean detailed, boolean sweep)
     {
         Map<String, Object> metadata = new LinkedHashMap<>();
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -45,7 +45,7 @@ public final class ProfileCapture
         metadata.put("coreVersion", version("irl-core"));
         metadata.put("addonVersion", version("irlite"));
         metadata.put("coreClassSha256", classHash(ShadowBaker.class));
-        metadata.put("profilerClassSha256", classHash(VlProfiler.class));
+        metadata.put("profilerClassSha256", classHash(ProfileSession.class));
         metadata.put("coreClassResource", String.valueOf(ShadowBaker.class.getResource("ShadowBaker.class")));
         metadata.put("java", System.getProperty("java.version"));
         metadata.put("gpu", GL11.glGetString(GL11.GL_RENDERER));
@@ -91,7 +91,7 @@ public final class ProfileCapture
     }
 
     /** Hash Iris's assembled source inputs at program creation, before its GL transforms. */
-    public static void programSource(ProgramSource source)
+    public void programSource(ProgramSource source)
     {
         if (!VlProfiler.isEnabled()) return;
         try
@@ -113,13 +113,13 @@ public final class ProfileCapture
         }
     }
 
-    private static String version(String id)
+    private String version(String id)
     {
         return FabricLoader.getInstance().getModContainer(id)
             .map(mod -> mod.getMetadata().getVersion().getFriendlyString()).orElse("missing");
     }
 
-    private static String classHash(Class<?> type)
+    private String classHash(Class<?> type)
     {
         try (InputStream stream = type.getResourceAsStream(type.getSimpleName() + ".class"))
         {
@@ -132,9 +132,9 @@ public final class ProfileCapture
         }
     }
 
-    static void sample(String kind, long frame, String name, long value)
+    void sample(String kind, long frame, String name, long value)
     {
-        if (writer == null) return;
+        if (this.writer == null) return;
         try
         {
             writer.write(kind + "," + frame + ",\"" + name.replace("\"", "\"\"") + "\"," + value + "\n");
@@ -145,23 +145,23 @@ public final class ProfileCapture
         }
     }
 
-    static void flush()
+    void flush()
     {
-        if (writer == null) return;
-        try { writer.flush(); }
+        if (this.writer == null) return;
+        try { this.writer.flush(); }
         catch (IOException e) { failed(e); }
     }
 
-    static void close()
+    void close()
     {
-        if (writer == null) return;
-        BufferedWriter closing = writer;
+        if (this.writer == null) return;
+        BufferedWriter closing = this.writer;
         writer = null;
         try { closing.close(); }
         catch (IOException e) { System.out.println("[irlite] profile-csv: close failed: " + e); }
     }
 
-    private static void failed(IOException e)
+    private void failed(IOException e)
     {
         close();
         System.out.println("[irlite] profile-csv: export disabled: " + e);

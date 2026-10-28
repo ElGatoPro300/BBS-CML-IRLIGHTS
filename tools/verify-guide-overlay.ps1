@@ -11,7 +11,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Cannot resolve overlay test classpath' }
     $output = Join-Path $repo 'build/guide-overlay-test'
     New-Item -ItemType Directory -Force -Path $output | Out-Null
-    $classpath = [IO.File]::ReadAllText((Join-Path $repo 'build/profiles-bbs-test/classpath.txt')).Replace('\', '/')
+    $classpath = [IO.File]::ReadAllText((Join-Path $repo "build/targets/$MinecraftVersion/profiles-bbs-test/classpath.txt")).Replace('\', '/')
     $fixture = Join-Path $output 'BBSRendering.java'
     [IO.File]::WriteAllText($fixture, @'
 package mchorse.bbs_mod.client;

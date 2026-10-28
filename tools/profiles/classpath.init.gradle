@@ -3,7 +3,7 @@ gradle.projectsEvaluated {
     root.tasks.register('profileTestClasspath') {
         dependsOn root.tasks.named('compileClientJava')
         doLast {
-            def output = root.file('build/profiles-bbs-test/classpath.txt')
+            def output = root.layout.buildDirectory.file('profiles-bbs-test/classpath.txt').get().asFile
             output.parentFile.mkdirs()
             output.text = root.sourceSets.client.runtimeClasspath.asPath
         }

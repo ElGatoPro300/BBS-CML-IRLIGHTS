@@ -4,6 +4,8 @@ import qualet.irlite.client.diag.VlProfiler;
 import qualet.irlite.client.light.ShadowResourceVersions;
 import qualet.irlite.client.light.cookie.CookieArray;
 import qualet.irlite.client.patcher.BbsPatcherHost;
+import qualet.irlite.client.runtime.ClientRuntime;
+import qualet.irlite.platform.RenderApi;
 
 import org.qualet.irl.light.IrlSamplers;
 import org.qualet.irl.light.shadow.IRLiteBbsCasterSource;
@@ -12,6 +14,7 @@ import org.qualet.irl.light.shadow.ShadowEngine;
 import org.qualet.irl.patcher.Patcher;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -26,6 +29,8 @@ public class IrliteClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ClientRuntime.install();
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientRuntime.get().reset());
         // Wire the shared patcher core to BBS (UIUtils + Iris + bundled assets).
         Patcher.install(new BbsPatcherHost());
 
@@ -57,7 +62,7 @@ public class IrliteClient implements ClientModInitializer {
         // irl-core shadow orchestration can reach this mod's per-mod pieces.
         ShadowEngine.install(new IRLiteBbsCasterSource(), IrliteShadowConfig.INSTANCE);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-            @Override public Identifier getFabricId() { return Identifier.of("irlite", "shadow_silhouettes"); }
+            @Override public Identifier getFabricId() { return RenderApi.identifier("irlite", "shadow_silhouettes"); }
             @Override public void reload(ResourceManager manager) { ShadowResourceVersions.reloaded(); }
         });
 

@@ -3,6 +3,7 @@ package qualet.irlite.client.forms;
 import qualet.irlite.client.light.IRLightPositionResolver;
 import qualet.irlite.client.light.LightEffectsRegistration;
 import qualet.irlite.client.light.cookie.CookieArray;
+import qualet.irlite.client.runtime.ClientRuntime;
 import qualet.irlite.forms.SpotlightForm;
 
 import org.qualet.irl.light.LightMath;
@@ -44,14 +45,14 @@ public class SpotlightFormRenderer extends AbstractLightFormRenderer<SpotlightFo
          * capture the guide's local->view matrix wherever the guide is drawn. */
         if (context.modelRenderer || context.type == FormRenderType.ENTITY)
         {
-            SpotGuideDrag.captureGuideMatrix(this.form, context.stack);
+            ClientRuntime.get().spotGuide().captureGuideMatrix(this.form, context.stack);
         }
 
         float range = this.form.range.get();
         float outer = this.form.radius.get();
         float inner = this.form.innerRadius.get();
 
-        if (world && WorldLightGuideOverlay.defer(context.stack, color, range, outer, inner, true))
+        if (world && ClientRuntime.get().guides().defer(context.stack, color, range, outer, inner, true))
         {
             return;
         }

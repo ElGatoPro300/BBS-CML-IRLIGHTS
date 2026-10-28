@@ -3,6 +3,7 @@ package qualet.irlite.client.ui.forms.editors.panels;
 import qualet.irlite.client.light.ReplaySelection;
 import qualet.irlite.client.ui.replays.LightReplayPicker;
 import qualet.irlite.client.ui.replays.ReplayFilmContext;
+import qualet.irlite.domain.replay.ReplaySelections;
 import qualet.irlite.forms.ValueReplaySelection;
 
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -84,7 +85,7 @@ public final class LightReplayWidgets
             return;
         }
 
-        ReplaySelection.Selection current = ReplaySelection.decode(this.list.get().get());
+        ReplaySelections.Selection current = ReplaySelection.decode(this.list.get().get());
 
         LightReplayPicker.open(this.owner.getContext(), panel, current, (value) -> this.list.get().set(value));
     }

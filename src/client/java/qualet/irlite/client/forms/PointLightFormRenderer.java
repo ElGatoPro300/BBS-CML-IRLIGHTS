@@ -2,6 +2,7 @@ package qualet.irlite.client.forms;
 
 import qualet.irlite.client.light.IRLightPositionResolver;
 import qualet.irlite.client.light.LightEffectsRegistration;
+import qualet.irlite.client.runtime.ClientRuntime;
 import qualet.irlite.forms.PointLightForm;
 
 import org.qualet.irl.light.LightRegistry;
@@ -37,7 +38,7 @@ public class PointLightFormRenderer extends AbstractLightFormRenderer<PointLight
     {
         float radius = this.form.radius.get();
 
-        if (world && WorldLightGuideOverlay.defer(context.stack, color, radius, 0F, 0F, false))
+        if (world && ClientRuntime.get().guides().defer(context.stack, color, radius, 0F, 0F, false))
         {
             return;
         }

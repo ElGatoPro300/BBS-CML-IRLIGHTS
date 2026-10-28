@@ -1,6 +1,7 @@
 package qualet.irlite.client.ui.replays;
 
 import qualet.irlite.client.light.ReplaySelection;
+import qualet.irlite.domain.replay.ReplaySelections;
 
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.replays.Replay;
@@ -28,7 +29,7 @@ public final class LightReplayPicker
     private LightReplayPicker()
     {}
 
-    public static void open(UIContext context, UIFilmPanel panel, ReplaySelection.Selection current, Consumer<String> apply)
+    public static void open(UIContext context, UIFilmPanel panel, ReplaySelections.Selection current, Consumer<String> apply)
     {
         Film film = panel.getData();
         Map<String, IEntity> entities = new LinkedHashMap<>();
@@ -51,7 +52,7 @@ public final class LightReplayPicker
             }
 
             /* Keep saved selections even when their entities aren't currently instantiated. */
-            if (current.belongsTo(film) && current.replays().contains(id))
+            if (current.belongsTo(film.getId()) && current.replays().contains(id))
             {
                 selected.add(id);
             }

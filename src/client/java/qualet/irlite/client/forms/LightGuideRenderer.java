@@ -1,5 +1,8 @@
 package qualet.irlite.client.forms;
 
+import qualet.irlite.domain.guide.SpotGuideMath;
+import qualet.irlite.platform.RenderApi;
+
 import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Color;
@@ -7,8 +10,6 @@ import mchorse.bbs_mod.utils.colors.Color;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 
@@ -51,7 +52,7 @@ final class LightGuideRenderer
      */
     static float spotRingZ(float range)
     {
-        return Math.max(range, 0.05F);
+        return SpotGuideMath.capZ(range);
     }
 
     public static void renderSpotlight(MatrixStack stack, Color color, float range, float outerAngle, float innerAngle)
@@ -85,9 +86,7 @@ final class LightGuideRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
-        // 1.21: begin() moved to Tessellator and returns the builder.
-        BufferBuilder builder = Tessellator.getInstance()
-            .begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());
@@ -172,7 +171,7 @@ final class LightGuideRenderer
 
     private static void vertex(BufferBuilder builder, Matrix4f m, float x, float y, float z, float r, float g, float b, float a)
     {
-        builder.vertex(m, x, y, z).color(r, g, b, a);
+        RenderApi.colorVertex(builder, m, x, y, z, r, g, b, a);
     }
 
     private static void line(BufferBuilder builder, MatrixStack stack, float x1, float y1, float z1, float x2, float y2, float z2, float t, Color color, float alpha)
@@ -254,9 +253,7 @@ final class LightGuideRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 
-        // 1.21: begin() moved to Tessellator and returns the builder.
-        BufferBuilder builder = Tessellator.getInstance()
-            .begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
         BufferRenderer.drawWithGlobalProgram(builder.end());

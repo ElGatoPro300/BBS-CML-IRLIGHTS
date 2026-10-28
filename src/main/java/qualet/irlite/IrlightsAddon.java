@@ -55,62 +55,62 @@ public class IrlightsAddon implements BBSAddonMod
         // UIPresetSection, not registered values) and the few knobs that make
         // sense on their own.
         builder.category("presets");
-        IrliteConfig.vlIntensity = builder.getFloat("vl_intensity", old.getFloat("vl_intensity", 1F), 0F, 5F);
-        IrliteConfig.maxShaderLights = builder.getInt("max_shader_lights", old.getInt("max_shader_lights", 0), 0, 2048);
-        IrliteConfig.showGuides = builder.getBoolean("show_guides", old.getBool("show_guides", false));
+        IrliteConfig.values().vlIntensity = builder.getFloat("vl_intensity", old.getFloat("vl_intensity", 1F), 0F, 5F);
+        IrliteConfig.values().maxShaderLights = builder.getInt("max_shader_lights", old.getInt("max_shader_lights", 0), 0, 2048);
+        IrliteConfig.values().showGuides = builder.getBoolean("show_guides", old.getBool("show_guides", false));
 
         // Wave 2 (2026-09-15): the surface half of the former Iris screen —
         // diffuse/specular/toon and their numbers now ride the globals UBO.
         builder.category("lighting");
-        IrliteConfig.diffuse = builder.getBoolean("diffuse", old.getBool("diffuse", true));
-        IrliteConfig.intensity = builder.getFloat("intensity", old.getFloat("intensity", 1F), 0F, 4F);
-        IrliteConfig.specular = builder.getBoolean("specular", old.getBool("specular", true));
-        IrliteConfig.specularIntensity = builder.getFloat("specular_intensity", old.getFloat("specular_intensity", 1F), 0F, 4F);
-        IrliteConfig.toon = builder.getBoolean("toon", old.getBool("toon", false));
-        IrliteConfig.toonBands = builder.getInt("toon_bands", old.getInt("toon_bands", 3), 2, 8);
-        IrliteConfig.toonSmooth = builder.getFloat("toon_smooth", old.getFloat("toon_smooth", 0.10F), 0F, 0.5F);
+        IrliteConfig.values().diffuse = builder.getBoolean("diffuse", old.getBool("diffuse", true));
+        IrliteConfig.values().intensity = builder.getFloat("intensity", old.getFloat("intensity", 1F), 0F, 4F);
+        IrliteConfig.values().specular = builder.getBoolean("specular", old.getBool("specular", true));
+        IrliteConfig.values().specularIntensity = builder.getFloat("specular_intensity", old.getFloat("specular_intensity", 1F), 0F, 4F);
+        IrliteConfig.values().toon = builder.getBoolean("toon", old.getBool("toon", false));
+        IrliteConfig.values().toonBands = builder.getInt("toon_bands", old.getInt("toon_bands", 3), 2, 8);
+        IrliteConfig.values().toonSmooth = builder.getFloat("toon_smooth", old.getFloat("toon_smooth", 0.10F), 0F, 0.5F);
 
         builder.category("volumetric");
-        IrliteConfig.vlSteps = builder.getInt("vl_steps", old.getInt("vl_steps", 48), 8, 64);
-        IrliteConfig.vlMaxDist = builder.getFloat("vl_max_dist", old.getFloat("vl_max_dist", 96F), 32F, 256F);
-        IrliteConfig.vlShadowsLive = builder.getBoolean("vl_shadows_live", old.getBool("vl_shadows_live", true));
-        IrliteConfig.vlShadowStride = builder.getInt("vl_shadow_stride", old.getInt("vl_shadow_stride", 2), 1, 4);
-        IrliteConfig.vlTipBoost = builder.getFloat("vl_tip_boost", old.getFloat("vl_tip_boost", 1.5F), 0F, 4F);
-        IrliteConfig.vlTipRadius = builder.getFloat("vl_tip_radius", old.getFloat("vl_tip_radius", 1.5F), 0.5F, 4F);
-        IrliteConfig.vlNoiseLive = builder.getBoolean("vl_noise_live", old.getBool("vl_noise_live", true));
-        IrliteConfig.vlNoiseAmount = builder.getFloat("vl_noise_amount", old.getFloat("vl_noise_amount", 0.6F), 0.2F, 1F);
-        IrliteConfig.vlNoiseScale = builder.getFloat("vl_noise_scale", old.getFloat("vl_noise_scale", 2F), 0.5F, 6F);
-        IrliteConfig.vlNoiseSpeed = builder.getFloat("vl_noise_speed", old.getFloat("vl_noise_speed", 0.25F), 0F, 3F);
-        IrliteConfig.vlNoiseMorph = builder.getFloat("vl_noise_morph", old.getFloat("vl_noise_morph", 0F), 0F, 3F);
-        IrliteConfig.vlNoiseStride = builder.getInt("vl_noise_stride", old.getInt("vl_noise_stride", 2), 1, 4);
-        IrliteConfig.vlDitherTemporal = builder.getBoolean("vl_dither_temporal", old.getBool("vl_dither_temporal", true));
+        IrliteConfig.values().vlSteps = builder.getInt("vl_steps", old.getInt("vl_steps", 48), 8, 64);
+        IrliteConfig.values().vlMaxDist = builder.getFloat("vl_max_dist", old.getFloat("vl_max_dist", 96F), 32F, 256F);
+        IrliteConfig.values().vlShadowsLive = builder.getBoolean("vl_shadows_live", old.getBool("vl_shadows_live", true));
+        IrliteConfig.values().vlShadowStride = builder.getInt("vl_shadow_stride", old.getInt("vl_shadow_stride", 2), 1, 4);
+        IrliteConfig.values().vlTipBoost = builder.getFloat("vl_tip_boost", old.getFloat("vl_tip_boost", 1.5F), 0F, 4F);
+        IrliteConfig.values().vlTipRadius = builder.getFloat("vl_tip_radius", old.getFloat("vl_tip_radius", 1.5F), 0.5F, 4F);
+        IrliteConfig.values().vlNoiseLive = builder.getBoolean("vl_noise_live", old.getBool("vl_noise_live", true));
+        IrliteConfig.values().vlNoiseAmount = builder.getFloat("vl_noise_amount", old.getFloat("vl_noise_amount", 0.6F), 0.2F, 1F);
+        IrliteConfig.values().vlNoiseScale = builder.getFloat("vl_noise_scale", old.getFloat("vl_noise_scale", 2F), 0.5F, 6F);
+        IrliteConfig.values().vlNoiseSpeed = builder.getFloat("vl_noise_speed", old.getFloat("vl_noise_speed", 0.25F), 0F, 3F);
+        IrliteConfig.values().vlNoiseMorph = builder.getFloat("vl_noise_morph", old.getFloat("vl_noise_morph", 0F), 0F, 3F);
+        IrliteConfig.values().vlNoiseStride = builder.getInt("vl_noise_stride", old.getInt("vl_noise_stride", 2), 1, 4);
+        IrliteConfig.values().vlDitherTemporal = builder.getBoolean("vl_dither_temporal", old.getBool("vl_dither_temporal", true));
 
         builder.category("shadows");
-        IrliteConfig.shadowQuality = builder.getInt("shadow_quality", old.getInt("shadow_quality", 1), 0, 3);
-        IrliteConfig.shadowBlocks = builder.getBoolean("shadow_blocks", old.getBool("shadow_blocks", true));
+        IrliteConfig.values().shadowQuality = builder.getInt("shadow_quality", old.getInt("shadow_quality", 1), 0, 3);
+        IrliteConfig.values().shadowBlocks = builder.getBoolean("shadow_blocks", old.getBool("shadow_blocks", true));
         // Wave 3 (2026-07-21): the live half of what used to be five Iris options.
         // shadowsLive is the everyday on/off; IRLITE_SHADOWS stays on the Iris
         // screen as a compile-time escape hatch for drivers that choke on
         // samplerCubeArray. The other three former options are calibration
         // constants now, baked into the pack.
-        IrliteConfig.shadowsLive = builder.getBoolean("shadows_live", old.getBool("shadows_live", true));
-        IrliteConfig.shadowSoftness = builder.getFloat("shadow_softness", old.getFloat("shadow_softness", 0.10F), 0F, 0.8F);
-        IrliteConfig.shadowPartialTile = builder.getBoolean("shadow_partial_tile", old.getBool("shadow_partial_tile", true));
+        IrliteConfig.values().shadowsLive = builder.getBoolean("shadows_live", old.getBool("shadows_live", true));
+        IrliteConfig.values().shadowSoftness = builder.getFloat("shadow_softness", old.getFloat("shadow_softness", 0.10F), 0F, 0.8F);
+        IrliteConfig.values().shadowPartialTile = builder.getBoolean("shadow_partial_tile", old.getBool("shadow_partial_tile", true));
 
         // Wave 1 (2026-07-21): these ten used to be Iris-screen #defines, each
         // costing a shaderpack recompile. They now ride the globals UBO, so they
         // are live here and gone from the pack's settings screen.
         builder.category("outline");
-        IrliteConfig.outline = builder.getBoolean("outline", old.getBool("outline", true));
-        IrliteConfig.outlineTarget = builder.getInt("outline_target", old.getInt("outline_target", 1), 0, 2);
-        IrliteConfig.outlineStrength = builder.getFloat("outline_strength", old.getFloat("outline_strength", 0.65F), 0F, 3F);
-        IrliteConfig.outlinePixelSize = builder.getInt("outline_pixel_size", old.getInt("outline_pixel_size", 6), 1, 6);
-        IrliteConfig.outlineFresnelPower = builder.getFloat("outline_fresnel_power", old.getFloat("outline_fresnel_power", 2.2F), 1F, 4F);
-        IrliteConfig.outlineBack = builder.getFloat("outline_back", old.getFloat("outline_back", 1F), 0F, 2F);
-        IrliteConfig.outlineFront = builder.getBoolean("outline_front", old.getBool("outline_front", false));
-        IrliteConfig.outlineFrontStrength = builder.getFloat("outline_front_strength", old.getFloat("outline_front_strength", 0.3F), 0F, 1.5F);
-        IrliteConfig.outlineGlow = builder.getBoolean("outline_glow", old.getBool("outline_glow", false));
-        IrliteConfig.outlineGlowStrength = builder.getFloat("outline_glow_strength", old.getFloat("outline_glow_strength", 0.12F), 0F, 0.75F);
+        IrliteConfig.values().outline = builder.getBoolean("outline", old.getBool("outline", true));
+        IrliteConfig.values().outlineTarget = builder.getInt("outline_target", old.getInt("outline_target", 1), 0, 2);
+        IrliteConfig.values().outlineStrength = builder.getFloat("outline_strength", old.getFloat("outline_strength", 0.65F), 0F, 3F);
+        IrliteConfig.values().outlinePixelSize = builder.getInt("outline_pixel_size", old.getInt("outline_pixel_size", 6), 1, 6);
+        IrliteConfig.values().outlineFresnelPower = builder.getFloat("outline_fresnel_power", old.getFloat("outline_fresnel_power", 2.2F), 1F, 4F);
+        IrliteConfig.values().outlineBack = builder.getFloat("outline_back", old.getFloat("outline_back", 1F), 0F, 2F);
+        IrliteConfig.values().outlineFront = builder.getBoolean("outline_front", old.getBool("outline_front", false));
+        IrliteConfig.values().outlineFrontStrength = builder.getFloat("outline_front_strength", old.getFloat("outline_front_strength", 0.3F), 0F, 1.5F);
+        IrliteConfig.values().outlineGlow = builder.getBoolean("outline_glow", old.getBool("outline_glow", false));
+        IrliteConfig.values().outlineGlowStrength = builder.getFloat("outline_glow_strength", old.getFloat("outline_glow_strength", 0.12F), 0F, 0.75F);
 
         // Empty category — its body is injected at runtime by
         // UISettingsOverlayPanelMixin. buildSections still lists it.

@@ -1,6 +1,7 @@
 package qualet.irlite.client.light;
 
 import qualet.irlite.IrliteConfig;
+import qualet.irlite.domain.replay.ReplaySelections;
 import qualet.irlite.forms.LightEffects;
 import qualet.irlite.forms.LightForm;
 import qualet.irlite.forms.ValueReplaySelection;
@@ -54,16 +55,16 @@ public final class LightEffectsRegistration
 
             if (!Objects.equals(now, this.value) || !Objects.equals(base, this.original))
             {
-                ReplaySelection.Selection selection = ReplaySelection.decode(now);
+                ReplaySelections.Selection selection = ReplaySelection.decode(now);
 
-                if (selection.mode() == ReplaySelection.Mode.INHERIT)
+                if (selection.mode() == ReplaySelections.Mode.INHERIT)
                 {
                     selection = ReplaySelection.decode(base);
                 }
 
                 this.value = now;
                 this.original = base;
-                this.automatic = selection.mode() == ReplaySelection.Mode.SELECTED;
+                this.automatic = selection.mode() == ReplaySelections.Mode.SELECTED;
                 this.film = selection.film();
                 this.replays = selection.replays().toArray(new String[0]);
                 this.resolved = new int[this.replays.length];

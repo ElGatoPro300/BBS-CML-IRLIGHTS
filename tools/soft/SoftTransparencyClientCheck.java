@@ -68,7 +68,7 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
         catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
     }
 
-    private static void gpu(String mode, Runnable applyShaderBlend, int replaySlot) throws Exception
+    private static void gpu(String mode, Runnable applyShaderBlend, int replaySlot, Runnable clearShader) throws Exception
     {
         try (RenderPassState saved = new RenderPassState())
         {
@@ -107,6 +107,7 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                 {
                     for (float alpha : new float[] {0.01F, 0.075F, 0.1F, 0.25F, 0.5F, 0.75F, 0.998F, 1F})
                     {
+                        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
                         BlendModeOverride.restore();
                         RenderSystem.disableBlend();
                         GL11.glDisable(GL11.GL_BLEND);
@@ -119,6 +120,8 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                         queue.submit(spec, () ->
                         {
                             applyShaderBlend.run();
+                            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, fbo);
+                            GL11.glViewport(0, 0, 8, 8);
                             check(!GL30.glIsEnabledi(GL11.GL_BLEND, replaySlot), mode + " replay attachment must not blend");
                             GL20.glUseProgram(program);
                             GL20.glUniform1f(GL20.glGetUniformLocation(program, "Alpha"), alpha);
@@ -146,6 +149,7 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                         GL11.glReadPixels(4, 4, 1, 1, GL11.GL_RGBA, GL11.GL_FLOAT, pixel);
                         check(pixel.get(0) == 17F, mode + " lost queued replay tag: " + pixel.get(0));
                         check(ReplayOutlineContext.currentId() == 0, "Replay scope leaked after draw");
+                        clearShader.run();
                     }
                 }
             }
@@ -261,7 +265,7 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                 draw.draw();
                 setTag = ReplayOutlineContext.class.getDeclaredMethod("set", int.class);
                 setTag.setAccessible(true);
-                gpu("Iris indexed blend lock", () -> new BufferBlendOverride(1, null).apply(), 1);
+                gpu("Iris indexed blend lock", () -> new BufferBlendOverride(1, null).apply(), 1, () -> {});
                 Iris.getIrisConfig().setShaderPackName(System.getProperty("irlite.softCheck.shaderpack"));
                 Iris.getIrisConfig().setShadersEnabled(true);
                 Iris.getPipelineManager().destroyPipeline();
@@ -269,7 +273,7 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                 IrisRenderingPipeline pipeline = (IrisRenderingPipeline) Iris.getPipelineManager().preparePipeline(new NamespacedId("minecraft", "overworld"));
                 if (Iris.isFallback()) throw new AssertionError("Shader pipeline unavailable");
                 ExtendedShader entity = (ExtendedShader) pipeline.getShaderMap().getShader(ShaderKey.ENTITIES_TRANSLUCENT);
-                Method apply = ExtendedShader.class.getDeclaredMethod("applyBlendModes");
+                Method apply = ExtendedShader.class.getDeclaredMethod(System.getProperty("irlite.platform.shaderBlendMethod", "applyBlendModes"));
                 apply.setAccessible(true);
                 Field overrides = ExtendedShader.class.getDeclaredField("bufferBlendOverrides");
                 overrides.setAccessible(true);
@@ -282,7 +286,14 @@ public final class SoftTransparencyClientCheck implements ClientModInitializer
                 {
                     try { apply.invoke(entity); }
                     catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
-                }, replaySlot);
+                }, replaySlot, () ->
+                {
+                    if (apply.getName().equals("bind"))
+                    {
+                        try { ExtendedShader.class.getMethod("unbind").invoke(entity); }
+                        catch (Exception error) { throw new RuntimeException(error); }
+                    }
+                });
                 ownership();
                 shadows();
                 if (failures != 0) throw new AssertionError(failures + " compatibility failures");

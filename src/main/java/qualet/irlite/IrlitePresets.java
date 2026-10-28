@@ -116,13 +116,13 @@ public final class IrlitePresets
 
         Quality q = QUALITY[index];
 
-        set(IrliteConfig.vlSteps, q.steps());
-        set(IrliteConfig.vlMaxDist, q.maxDist());
-        set(IrliteConfig.vlShadowStride, q.shadowStride());
-        set(IrliteConfig.vlNoiseStride, q.noiseStride());
-        set(IrliteConfig.vlShadowsLive, q.vlShadows());
-        set(IrliteConfig.shadowQuality, q.shadowQuality());
-        set(IrliteConfig.shadowBlocks, q.blockShadows());
+        set(IrliteConfig.values().vlSteps, q.steps());
+        set(IrliteConfig.values().vlMaxDist, q.maxDist());
+        set(IrliteConfig.values().vlShadowStride, q.shadowStride());
+        set(IrliteConfig.values().vlNoiseStride, q.noiseStride());
+        set(IrliteConfig.values().vlShadowsLive, q.vlShadows());
+        set(IrliteConfig.values().shadowQuality, q.shadowQuality());
+        set(IrliteConfig.values().shadowBlocks, q.blockShadows());
     }
 
     public static void applyStyle(int index)
@@ -134,12 +134,12 @@ public final class IrlitePresets
 
         Style s = STYLE[index];
 
-        set(IrliteConfig.vlNoiseLive, s.noise());
-        set(IrliteConfig.vlNoiseAmount, s.amount());
-        set(IrliteConfig.vlNoiseScale, s.scale());
-        set(IrliteConfig.vlNoiseSpeed, s.speed());
-        set(IrliteConfig.vlTipBoost, s.tipBoost());
-        set(IrliteConfig.vlTipRadius, s.tipRadius());
+        set(IrliteConfig.values().vlNoiseLive, s.noise());
+        set(IrliteConfig.values().vlNoiseAmount, s.amount());
+        set(IrliteConfig.values().vlNoiseScale, s.scale());
+        set(IrliteConfig.values().vlNoiseSpeed, s.speed());
+        set(IrliteConfig.values().vlTipBoost, s.tipBoost());
+        set(IrliteConfig.values().vlTipRadius, s.tipRadius());
     }
 
     private static void set(ValueInt value, int x)

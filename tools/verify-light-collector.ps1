@@ -1,13 +1,14 @@
 param(
     [string]$JavaHome = $env:JAVA_HOME,
     [string]$GradleUserHome = $env:GRADLE_USER_HOME,
-    [string]$ClientClasses
+    [string]$ClientClasses,
+    [string]$MinecraftVersion = '1.21.1'
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
 $workspace = Split-Path -Parent (Split-Path -Parent $repo)
 if (!$GradleUserHome) { $GradleUserHome = Join-Path $workspace '.gradle-user' }
-if (!$ClientClasses) { $ClientClasses = Join-Path $repo 'build/classes/java/client' }
+if (!$ClientClasses) { $ClientClasses = Join-Path $repo "build/targets/$MinecraftVersion/classes/java/client" }
 $nestedClass = Join-Path $ClientClasses 'qualet/irlite/client/light/LightCollector$TraversalScratch.class'
 if (!(Test-Path -LiteralPath $nestedClass)) {
     throw 'Run the addon compileClientJava task first, or supply -ClientClasses with its compiled output.'

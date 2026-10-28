@@ -1,6 +1,7 @@
 package qualet.irlite.client.forms;
 
 import qualet.irlite.client.ui.forms.editors.panels.UISpotlightFormPanel;
+import qualet.irlite.domain.guide.SpotGuideMath;
 import qualet.irlite.forms.SpotlightForm;
 
 import mchorse.bbs_mod.BBSModClient;
@@ -59,44 +60,53 @@ public final class SpotGuideDrag
     private static final float EPSILON = 1e-5F;
 
     /** Guide local->view matrices captured at visible render, per live form. */
-    private static final Map<SpotlightForm, Matrix4f> GUIDE_MATRICES = new WeakHashMap<>();
+    private final Map<SpotlightForm, Matrix4f> guideMatrices = new WeakHashMap<>();
 
-    private static WeakReference<UISpotlightFormPanel> panel = new WeakReference<>(null);
-    private static WeakReference<UIFilmPanel> filmPanelCache = new WeakReference<>(null);
+    private WeakReference<UISpotlightFormPanel> panel = new WeakReference<>(null);
+    private WeakReference<UIFilmPanel> filmPanelCache = new WeakReference<>(null);
 
     /* Active drag session. Host identifies which viewport owns the drag
      * (UIPickableFormRenderer in the form editor, UIFilmController in the
      * film editor); camera/viewport are live references from that host. */
-    private static SpotlightForm dragForm;
-    private static String dragHandle;
-    private static Object dragHost;
-    private static Camera dragCamera;
-    private static Area dragViewport;
+    private SpotlightForm dragForm;
+    private String dragHandle;
+    private Object dragHost;
+    private Camera dragCamera;
+    private Area dragViewport;
 
     /** Null in the form preview; film gestures follow BBS's auto-keyframe setting. */
-    private static SpotGuideKeyframes filmKeyframes;
-    private static int dragMouseX;
-    private static int dragMouseY;
-    private static boolean dragMoved;
+    private SpotGuideKeyframes filmKeyframes;
+    private int dragMouseX;
+    private int dragMouseY;
+    private boolean dragMoved;
 
-    private SpotGuideDrag()
+    public SpotGuideDrag()
     {}
 
+    public void reset()
+    {
+        this.stop();
+        this.guideMatrices.clear();
+        this.filmSelected.clear();
+        this.panel = new WeakReference<>(null);
+        this.filmPanelCache = new WeakReference<>(null);
+    }
+
     /** The active spotlight panel registers itself so drags can live-sync its trackpads. */
-    public static void bindPanel(UISpotlightFormPanel activePanel)
+    public void bindPanel(UISpotlightFormPanel activePanel)
     {
         panel = new WeakReference<>(activePanel);
     }
 
     /** Captured from the editor-preview visible pass so the handles track the rendered guide. */
-    public static void captureGuideMatrix(SpotlightForm form, MatrixStack stack)
+    public void captureGuideMatrix(SpotlightForm form, MatrixStack stack)
     {
-        GUIDE_MATRICES.put(form, new Matrix4f(stack.peek().getPositionMatrix()));
+        guideMatrices.put(form, new Matrix4f(stack.peek().getPositionMatrix()));
     }
 
-    public static boolean isDragging()
+    public boolean isDragging()
     {
-        return dragForm != null;
+        return this.dragForm != null;
     }
 
     /**
@@ -105,7 +115,7 @@ public final class SpotGuideDrag
      * {@code subMouseClicked}; returning true consumes the click before BBS's
      * gizmo/bone picking.
      */
-    public static boolean tryStart(UIPickableFormRenderer renderer, UIContext context)
+    public boolean tryStart(UIPickableFormRenderer renderer, UIContext context)
     {
         return tryStartWith(renderer, renderer.getStencil(), renderer.camera, renderer.area, context);
     }
@@ -115,7 +125,7 @@ public final class SpotGuideDrag
      * viewport camera (the exact pair BBS's own film gizmo drags with, see
      * {@code UIReplaysEditorUtils.startFilmGizmo}).
      */
-    public static boolean tryStartFilm(UIFilmController controller, UIContext context)
+    public boolean tryStartFilm(UIFilmController controller, UIContext context)
     {
         /* No drags while flying or while the cursor is grabbed (actor control
          * mode) — the stencil pick under a locked cursor is meaningless. */
@@ -138,7 +148,7 @@ public final class SpotGuideDrag
         /* Keyframe gate: dragging in the film edits keyframes only. */
         filmKeyframes = resolveFilmKeyframes(controller);
 
-        if (filmKeyframes == null)
+        if (this.filmKeyframes == null)
         {
             stop();
 
@@ -152,27 +162,27 @@ public final class SpotGuideDrag
      * Resolve the replay track without creating a key on a click alone.
      * With auto-keyframing off, retain the existing governing-keyframe behavior.
      */
-    private static SpotGuideKeyframes resolveFilmKeyframes(UIFilmController controller)
+    private SpotGuideKeyframes resolveFilmKeyframes(UIFilmController controller)
     {
         Replay replay = selectedReplay();
 
-        if (replay == null || dragForm == null || dragHandle == null)
+        if (replay == null || this.dragForm == null || this.dragHandle == null)
         {
             return null;
         }
 
-        ValueFloat property = switch (dragHandle)
+        ValueFloat property = switch (this.dragHandle)
         {
-            case HANDLE_RANGE -> dragForm.range;
-            case HANDLE_INNER -> dragForm.innerRadius;
-            default -> dragForm.radius;
+            case HANDLE_RANGE -> this.dragForm.range;
+            case HANDLE_INNER -> this.dragForm.innerRadius;
+            default -> this.dragForm.radius;
         };
 
         return SpotGuideKeyframes.begin(replay.properties, property,
             controller.panel.getCursor(), controller.isInstantKeyframes());
     }
 
-    private static boolean tryStartWith(Object host, StencilFormFramebuffer stencil, Camera camera, Area viewport, UIContext context)
+    private boolean tryStartWith(Object host, StencilFormFramebuffer stencil, Camera camera, Area viewport, UIContext context)
     {
         if (context.mouseButton != 0 || !stencil.hasPicked())
         {
@@ -186,7 +196,7 @@ public final class SpotGuideDrag
             return false;
         }
 
-        if (!isHandle(pair.b) || !GUIDE_MATRICES.containsKey(spot))
+        if (!isHandle(pair.b) || !this.guideMatrices.containsKey(spot))
         {
             return false;
         }
@@ -204,9 +214,9 @@ public final class SpotGuideDrag
     }
 
     /** Ends the drag; true when a drag was active (the release is then consumed). */
-    public static boolean mouseReleased()
+    public boolean mouseReleased()
     {
-        if (dragForm == null)
+        if (this.dragForm == null)
         {
             return false;
         }
@@ -216,9 +226,9 @@ public final class SpotGuideDrag
         return true;
     }
 
-    public static void stop()
+    public void stop()
     {
-        if (filmKeyframes != null)
+        if (this.filmKeyframes != null)
         {
             filmKeyframes.finish();
         }
@@ -235,9 +245,9 @@ public final class SpotGuideDrag
      * Per-frame drag update, driven from the host mixins (form editor:
      * {@code renderUserModel} tail; film editor: {@code renderPickingPreview} head).
      */
-    public static void update(Object host, UIContext context)
+    public void update(Object host, UIContext context)
     {
-        if (dragForm == null || dragHost != host)
+        if (this.dragForm == null || this.dragHost != host)
         {
             return;
         }
@@ -247,14 +257,14 @@ public final class SpotGuideDrag
             return;
         }
 
-        dragMoved |= context.mouseX != dragMouseX || context.mouseY != dragMouseY;
+        dragMoved |= context.mouseX != this.dragMouseX || context.mouseY != this.dragMouseY;
 
-        if (filmKeyframes != null && !dragMoved)
+        if (this.filmKeyframes != null && !this.dragMoved)
         {
             return;
         }
 
-        Matrix4f guide = GUIDE_MATRICES.get(dragForm);
+        Matrix4f guide = this.guideMatrices.get(this.dragForm);
 
         if (guide == null)
         {
@@ -263,8 +273,8 @@ public final class SpotGuideDrag
             return;
         }
 
-        Camera camera = dragCamera;
-        Area area = dragViewport;
+        Camera camera = this.dragCamera;
+        Area area = this.dragViewport;
 
         /* Guide-local -> camera-relative "world" of the preview scene. */
         Matrix4f localToWorld = new Matrix4f(camera.view).invert().mul(guide);
@@ -291,20 +301,20 @@ public final class SpotGuideDrag
             return;
         }
 
-        if (HANDLE_RANGE.equals(dragHandle))
+        if (HANDLE_RANGE.equals(this.dragHandle))
         {
             updateRange(o, d);
         }
         else
         {
-            updateAngle(o, d, HANDLE_INNER.equals(dragHandle));
+            updateAngle(o, d, HANDLE_INNER.equals(this.dragHandle));
         }
 
-        UISpotlightFormPanel activePanel = panel.get();
+        UISpotlightFormPanel activePanel = this.panel.get();
 
         if (activePanel != null)
         {
-            activePanel.syncLightShape(dragForm);
+            activePanel.syncLightShape(this.dragForm);
         }
     }
 
@@ -312,24 +322,14 @@ public final class SpotGuideDrag
      * Range handle: the cap-center disc slides along the guide's Z axis. New
      * range = Z of the closest point on that axis to the mouse ray.
      */
-    private static void updateRange(Vector3f o, Vector3f d)
+    private void updateRange(Vector3f o, Vector3f d)
     {
-        float a = d.lengthSquared();
-        float b = d.z;
-        float denom = a - b * b;
+        float range = SpotGuideMath.range(o.x, o.y, o.z, d.x, d.y, d.z);
 
-        /* Ray (anti)parallel to the axis — no stable closest point. */
-        if (denom < EPSILON)
+        if (Float.isFinite(range))
         {
-            return;
+            writeValue(range, this.dragForm.range);
         }
-
-        float oDotD = o.dot(d);
-        float axisZ = (a * o.z - b * oDotD) / denom;
-        float capSign = Math.signum(LightGuideRenderer.spotRingZ(1F));
-        float range = clamp(capSign * axisZ, 0.1F, 128F);
-
-        writeValue(range, dragForm.range);
     }
 
     /**
@@ -337,35 +337,14 @@ public final class SpotGuideDrag
      * the ray with that plane; the radial distance to the axis maps back to the
      * cone angle via {@code angle = 2 * atan(radial / range)}.
      */
-    private static void updateAngle(Vector3f o, Vector3f d, boolean inner)
+    private void updateAngle(Vector3f o, Vector3f d, boolean inner)
     {
-        float range = Math.max(dragForm.range.get(), 0.05F);
-        float capZ = LightGuideRenderer.spotRingZ(range);
+        float angle = SpotGuideMath.angle(o.x, o.y, o.z, d.x, d.y, d.z,
+            dragForm.range.get(), inner ? this.dragForm.radius.get() : 179F);
 
-        if (Math.abs(d.z) < EPSILON)
+        if (Float.isFinite(angle))
         {
-            return;
-        }
-
-        float t = (capZ - o.z) / d.z;
-
-        if (t <= 0F)
-        {
-            return;
-        }
-
-        float hx = o.x + d.x * t;
-        float hy = o.y + d.y * t;
-        float radial = (float) Math.sqrt(hx * hx + hy * hy);
-        float angle = (float) Math.toDegrees(2D * Math.atan2(radial, Math.abs(capZ)));
-
-        if (inner)
-        {
-            writeValue(clamp(angle, 1F, dragForm.radius.get()), dragForm.innerRadius);
-        }
-        else
-        {
-            writeValue(clamp(angle, 1F, 179F), dragForm.radius);
+            writeValue(angle, inner ? this.dragForm.innerRadius : this.dragForm.radius);
         }
     }
 
@@ -374,11 +353,11 @@ public final class SpotGuideDrag
      * per-frame applyProperties then propagates it into the rendered copy),
      * preview drags write the edited form's value directly.
      */
-    private static void writeValue(float value, ValueFloat directTarget)
+    private void writeValue(float value, ValueFloat directTarget)
     {
-        if (filmKeyframes != null)
+        if (this.filmKeyframes != null)
         {
-            filmKeyframes.write(value, ((UIFilmController) dragHost).panel.getCursor());
+            filmKeyframes.write(value, ((UIFilmController) this.dragHost).panel.getCursor());
         }
         else
         {
@@ -399,21 +378,21 @@ public final class SpotGuideDrag
      * renderer calls {@link #markFilmSelected} from exactly that pass, and the
      * world pass shows guides for marked roots while the mark stays fresh.
      */
-    private static final Map<Form, Long> FILM_SELECTED = new WeakHashMap<>();
+    private final Map<Form, Long> filmSelected = new WeakHashMap<>();
 
     private static final long FILM_MARK_TTL_MS = 300L;
 
-    public static void markFilmSelected(Form form)
+    public void markFilmSelected(Form form)
     {
         Form root = FormUtils.getRoot(form);
 
         if (root != null)
         {
-            FILM_SELECTED.put(root, System.currentTimeMillis());
+            filmSelected.put(root, System.currentTimeMillis());
         }
     }
 
-    public static boolean isFilmSelected(Form form)
+    public boolean isFilmSelected(Form form)
     {
         /* Guides only in the replay editor — hide them the instant the user
          * switches to the camera editor or the replay actions timeline, even
@@ -424,7 +403,7 @@ public final class SpotGuideDrag
         }
 
         Form root = FormUtils.getRoot(form);
-        Long mark = root == null ? null : FILM_SELECTED.get(root);
+        Long mark = root == null ? null : this.filmSelected.get(root);
 
         return mark != null && System.currentTimeMillis() - mark < FILM_MARK_TTL_MS;
     }
@@ -433,7 +412,7 @@ public final class SpotGuideDrag
      * The open film panel, or null when the film editor isn't the current screen.
      * Weakly cached so the per-frame lookups don't walk the dashboard panels.
      */
-    private static UIFilmPanel filmPanel()
+    private UIFilmPanel filmPanel()
     {
         UIDashboard dashboard = BBSModClient.getDashboardIfCreated();
 
@@ -442,7 +421,7 @@ public final class SpotGuideDrag
             return null;
         }
 
-        UIFilmPanel film = filmPanelCache.get();
+        UIFilmPanel film = this.filmPanelCache.get();
 
         if (film == null)
         {
@@ -454,7 +433,7 @@ public final class SpotGuideDrag
     }
 
     /** The replay currently selected in the film editor's replays panel, if any. */
-    private static Replay selectedReplay()
+    private Replay selectedReplay()
     {
         UIFilmPanel film = filmPanel();
 
@@ -468,7 +447,7 @@ public final class SpotGuideDrag
      * timeline, the same replay stays selected (so BBS keeps picking it), but the
      * guides must stay hidden and non-grabbable there.
      */
-    public static boolean isReplayEditorActive()
+    public boolean isReplayEditorActive()
     {
         UIFilmPanel film = filmPanel();
 
@@ -478,13 +457,10 @@ public final class SpotGuideDrag
             && film.replayEditor.getCategory() != UIReplaysEditor.ReplayCategory.ACTIONS;
     }
 
-    public static boolean isHandle(String bone)
+    public boolean isHandle(String bone)
     {
         return HANDLE_RADIUS.equals(bone) || HANDLE_INNER.equals(bone) || HANDLE_RANGE.equals(bone);
     }
 
-    private static float clamp(float value, float min, float max)
-    {
-        return Math.max(min, Math.min(max, value));
-    }
+
 }

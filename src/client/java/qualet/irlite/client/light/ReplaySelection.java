@@ -1,20 +1,16 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.domain.replay.ReplaySelections.Mode;
+import qualet.irlite.domain.replay.ReplaySelections.Selection;
 import qualet.irlite.forms.LightForm;
+import qualet.irlite.io.ReplaySelectionCodec;
 
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.forms.Form;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The replay list a light's outline/light linking is restricted to, and how it is
@@ -33,25 +29,6 @@ import java.util.Set;
  */
 public final class ReplaySelection
 {
-    /** Missing mode is the original format, whose switches still live on the form. */
-    public enum Mode { LEGACY, SELECTED, INHERIT }
-
-    public record Selection(String film, Set<String> replays, Mode mode)
-    {
-        public static final Selection EMPTY = new Selection("", Set.of(), Mode.LEGACY);
-
-        public boolean isEmpty()
-        {
-            return this.replays.isEmpty();
-        }
-
-        /** Whether this selection was made in {@code film} (a list from another film matches nobody). */
-        public boolean belongsTo(Film film)
-        {
-            return film != null && this.film.equals(film.getId());
-        }
-    }
-
     private ReplaySelection()
     {}
 
@@ -68,73 +45,17 @@ public final class ReplaySelection
 
     public static Selection decode(String value)
     {
-        if (value == null || value.isBlank())
-        {
-            return Selection.EMPTY;
-        }
-
-        try
-        {
-            JsonObject json = JsonParser.parseString(value).getAsJsonObject();
-            Set<String> replays = new LinkedHashSet<>();
-            JsonElement list = json.get("replays");
-
-            if (list != null && list.isJsonArray())
-            {
-                for (JsonElement item : list.getAsJsonArray())
-                {
-                    String id = item.getAsString();
-
-                    if (!id.isEmpty())
-                    {
-                        replays.add(id);
-                    }
-                }
-            }
-
-            JsonElement film = json.get("film");
-
-            JsonElement mode = json.get("mode");
-            Mode decodedMode = mode == null ? Mode.LEGACY
-                : "inherit".equals(mode.getAsString()) ? Mode.INHERIT
-                : "selected".equals(mode.getAsString()) ? Mode.SELECTED : Mode.LEGACY;
-
-            return new Selection(film == null ? "" : film.getAsString(), replays, decodedMode);
-        }
-        catch (RuntimeException e)
-        {
-            /* Malformed or hand-edited: fail closed (see the class comment). */
-            return Selection.EMPTY;
-        }
+        return ReplaySelectionCodec.decode(value);
     }
 
     public static String encode(String film, Collection<String> replays)
     {
-        return encode(film, replays, Mode.LEGACY);
+        return ReplaySelectionCodec.encode(film, replays);
     }
 
     public static String encode(String film, Collection<String> replays, Mode mode)
     {
-        JsonObject json = new JsonObject();
-        JsonArray array = new JsonArray();
-
-        for (String id : new LinkedHashSet<>(replays))
-        {
-            if (!id.isEmpty())
-            {
-                array.add(id);
-            }
-        }
-
-        json.addProperty("film", film == null ? "" : film);
-        json.add("replays", array);
-
-        if (mode != Mode.LEGACY)
-        {
-            json.addProperty("mode", mode == Mode.INHERIT ? "inherit" : "selected");
-        }
-
-        return json.toString();
+        return ReplaySelectionCodec.encode(film, replays, mode);
     }
 
     /** A short human summary for labels: the list positions of the chosen replays in {@code film}. */
@@ -145,7 +66,7 @@ public final class ReplaySelection
             return "nobody";
         }
 
-        if (!selection.belongsTo(film))
+        if (!selection.belongsTo(film == null ? null : film.getId()))
         {
             return selection.replays().size() + " replay(s) of another film";
         }

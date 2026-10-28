@@ -1,6 +1,6 @@
 package qualet.irlite.client.ui.forms.editors.panels;
 
-import qualet.irlite.client.forms.SpotGuideDrag;
+import qualet.irlite.client.runtime.ClientRuntime;
 import qualet.irlite.forms.SpotlightForm;
 
 import mchorse.bbs_mod.l10n.keys.IKey;
@@ -149,7 +149,7 @@ public class UISpotlightFormPanel extends UIFormPanel<SpotlightForm>
     {
         super.startEdit(form);
 
-        SpotGuideDrag.bindPanel(this);
+        ClientRuntime.get().spotGuide().bindPanel(this);
 
         this.color.setColor(form.color.get().getARGBColor());
         this.intensity.setValue(form.intensity.get());

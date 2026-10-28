@@ -34,9 +34,9 @@ public abstract class UISettingsOverlayPanelMixin
     {
         if (this.settings != null && "irlights".equals(this.settings.getId()))
         {
-            IrliteConfig.shadowQuality.modes(IRLightsUIKeys.LOW, IRLightsUIKeys.MEDIUM,
+            IrliteConfig.values().shadowQuality.modes(IRLightsUIKeys.LOW, IRLightsUIKeys.MEDIUM,
                 IRLightsUIKeys.HIGH, IRLightsUIKeys.ULTRA);
-            IrliteConfig.outlineTarget.modes(IRLightsUIKeys.ALL, IRLightsUIKeys.ENTITIES, IRLightsUIKeys.BLOCKS);
+            IrliteConfig.values().outlineTarget.modes(IRLightsUIKeys.ALL, IRLightsUIKeys.ENTITIES, IRLightsUIKeys.BLOCKS);
         }
     }
 

@@ -2,7 +2,7 @@ import groovy.json.JsonSlurper
 import java.util.jar.Manifest
 import java.util.zip.ZipFile
 
-/* Resolve only the two host libraries for this source branch. Never load a mixed fileTree. */
+/* Resolve only the two host libraries for the selected Minecraft target. Never load a mixed fileTree. */
 def libraryRoot = file(providers.gradleProperty('libDir').getOrElse('lib'))
 def libraryFolder = new File(libraryRoot, project.minecraft_version)
 def inspect = { File jar ->

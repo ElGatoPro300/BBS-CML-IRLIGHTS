@@ -99,11 +99,12 @@ public final class GuideOverlayTest
         check(gateFound, "World/offscreen shader gate exists in real BBS JAR");
 
         RenderSystem.initRenderThread();
+        WorldLightGuideOverlay overlay = new WorldLightGuideOverlay();
         Field pendingField = WorldLightGuideOverlay.class.getDeclaredField("pending");
         pendingField.setAccessible(true);
-        List<?> pending = (List<?>) pendingField.get(null);
-        WorldLightGuideOverlay.beginFrame();
-        WorldLightGuideOverlay.flush(); // Empty frames must not touch GL or the client singleton.
+        List<?> pending = (List<?>) pendingField.get(overlay);
+        overlay.beginFrame();
+        overlay.flush(); // Empty frames must not touch GL or the client singleton.
         MatrixStack stack = new MatrixStack();
         stack.translate(4, 5, -6);
         Matrix4f pose = new Matrix4f(stack.peek().getPositionMatrix());
@@ -111,11 +112,11 @@ public final class GuideOverlayTest
         RenderSystem.getModelViewMatrix().set(view);
         Color color = new Color(0.2F, 0.4F, 0.8F);
         BBSRendering.active = false;
-        check(!WorldLightGuideOverlay.defer(stack, color, 10F, 40F, 20F, true), "Offscreen/no-shader path remains immediate");
+        check(!overlay.defer(stack, color, 10F, 40F, 20F, true), "Offscreen/no-shader path remains immediate");
         check(pending.isEmpty(), "No offscreen command leaks into the world");
         BBSRendering.active = true;
-        check(WorldLightGuideOverlay.defer(stack, color, 10F, 40F, 20F, true), "World spotlight queued");
-        check(WorldLightGuideOverlay.defer(stack, color, 5F, 0F, 0F, false), "World point light queued");
+        check(overlay.defer(stack, color, 10F, 40F, 20F, true), "World spotlight queued");
+        check(overlay.defer(stack, color, 5F, 0F, 0F, false), "World point light queued");
         check(pending.size() == 2, "Both guides retained");
         Object spot = pending.get(0), point = pending.get(1);
         stack.translate(100, 200, 300);
@@ -133,9 +134,9 @@ public final class GuideOverlayTest
             ((Matrix4f) RenderSystem.class.getMethod("getProjectionMatrix").invoke(null)).scale(2F);
             check(((Matrix4f) value(spot, "projection")).equals(projection), "Projection is not a mutable global reference");
         }
-        WorldLightGuideOverlay.beginFrame();
+        overlay.beginFrame();
         check(pending.isEmpty(), "Aborted/old frame cannot leak guides into the next frame");
-        WorldLightGuideOverlay.flush();
+        overlay.flush();
         System.out.println("Guide overlay " + mc + ": PASS " + checks + " snapshot/API checks (no GPU draw)");
     }
 }

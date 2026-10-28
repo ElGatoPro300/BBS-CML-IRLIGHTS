@@ -1,7 +1,7 @@
 package qualet.irlite.mixin.client.iris;
 
-import qualet.irlite.client.diag.ProfileCapture;
 import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.runtime.ClientRuntime;
 
 import net.irisshaders.iris.gl.program.Program;
 import net.irisshaders.iris.pathways.FullScreenQuadRenderer;
@@ -47,7 +47,7 @@ public class CompositeRendererTimerMixin
                                        CallbackInfoReturnable<Program> cir)
     {
         VlProfiler.registerPassName(cir.getReturnValue(), source.getName());
-        if (cir.getReturnValue() != null) ProfileCapture.programSource(source);
+        if (cir.getReturnValue() != null) ClientRuntime.get().profiler().programSource(source);
     }
 
     @Redirect(method = "renderAll",

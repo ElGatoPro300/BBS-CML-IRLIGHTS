@@ -1,14 +1,25 @@
 package qualet.irlite.client.light;
 
-import java.util.concurrent.atomic.AtomicLong;
+import qualet.irlite.client.runtime.ClientRuntime;
 
+/** Stateless bridge used by texture and VAO mixins, including early asset uploads. */
 public final class ShadowResourceVersions
 {
-    private static final AtomicLong NEXT = new AtomicLong();
-    private static volatile long reload = next();
+    private ShadowResourceVersions()
+    {}
 
-    private ShadowResourceVersions() {}
-    public static long next() { return NEXT.incrementAndGet(); }
-    public static long reloadVersion() { return reload; }
-    public static void reloaded() { reload = next(); }
+    public static long next()
+    {
+        return ClientRuntime.get().resources().next();
+    }
+
+    public static long reloadVersion()
+    {
+        return ClientRuntime.get().resources().reloadVersion();
+    }
+
+    public static void reloaded()
+    {
+        ClientRuntime.get().resources().reloaded();
+    }
 }

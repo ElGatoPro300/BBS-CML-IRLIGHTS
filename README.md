@@ -114,27 +114,17 @@ IRLights has three layers that work together:
 
 ## Building from Source
 
-The addon consumes the shared [irl-core](https://github.com/quaIett/irl-core) engine as a
-**per-version Maven dependency**, so publish the matching core to mavenLocal first:
+The shared source tree builds 1.20.1, 1.20.4 and 1.21.1 using small Minecraft/Iris adapters. Put matching remapped CML and IRL Core libraries in `lib/<version>/`; see [local libraries](lib/README.md). Core is embedded once, while CML remains an external required mod.
 
 ```bash
-# 1) publish the matching core (from the irl-core repo)
-../irl-core/gradlew publishToMavenLocal
-
-# 2) build the addon for a specific Minecraft version
-./gradlew build --refresh-dependencies -Pmc=1.20.4   # or -Pmc=1.20.1
-# output: build/libs/irlite-1.1+mc1.20.4.jar
-
-# dev-test against a specific version:
-./gradlew runClient -Pmc=1.20.4
+./gradlew build -Pmc=1.20.4
+# output: build/targets/1.20.4/libs/bbs-cml-irlights-<version>-1.20.4.jar
+./gradlew build -Pmc=1.20.1
+./gradlew build -Pmc=1.21.1
+./gradlew runClient -Pmc=1.20.4 -PrunDir=build/manual-1.20.4
 ```
 
-Each Minecraft version produces its own jar (the `+mc<version>` suffix); the old universal
-`1.0-obt` jar is gone. `irl-core` is remapped to the target mappings and JiJ-bundled via Loom's
-`include`, so the shipped jar is self-contained.
-
-> **Minecraft 1.21.1** lives on the [`port/1.21.1`](https://github.com/quaIett/bbs-irlights-addon/tree/port/1.21.1)
-> branch (the final addon line — BBS does not exist past 1.21.1).
+Target dependencies live in `gradle/minecraft-targets.json`. Java 17 runs 1.20.x; Java 21 runs 1.21.1. The newer CML branches are recorded as pending until their dependencies and adapters are verified. See [architecture and verification status](docs/addon-refactor-status.md) before adding a target.
 
 ---
 

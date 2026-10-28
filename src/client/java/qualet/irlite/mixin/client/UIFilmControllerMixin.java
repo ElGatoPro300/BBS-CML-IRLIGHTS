@@ -1,6 +1,6 @@
 package qualet.irlite.mixin.client;
 
-import qualet.irlite.client.forms.SpotGuideDrag;
+import qualet.irlite.client.runtime.ClientRuntime;
 
 import mchorse.bbs_mod.ui.film.controller.UIFilmController;
 import mchorse.bbs_mod.ui.framework.UIContext;
@@ -25,7 +25,7 @@ public abstract class UIFilmControllerMixin
     @Inject(method = "renderHUD", at = @At("HEAD"))
     private void irlite$updateGuideDrag(UIContext context, Area area, CallbackInfo callback)
     {
-        SpotGuideDrag.update((UIFilmController) (Object) this, context);
+        ClientRuntime.get().spotGuide().update((UIFilmController) (Object) this, context);
     }
 
     @Inject(method = "subMouseClicked", at = @At("HEAD"), cancellable = true)
@@ -33,7 +33,7 @@ public abstract class UIFilmControllerMixin
     {
         UIFilmController self = (UIFilmController) (Object) this;
 
-        if (SpotGuideDrag.tryStartFilm(self, context))
+        if (ClientRuntime.get().spotGuide().tryStartFilm(self, context))
         {
             cir.setReturnValue(true);
         }
@@ -42,7 +42,7 @@ public abstract class UIFilmControllerMixin
     @Inject(method = "subMouseReleased", at = @At("HEAD"), cancellable = true)
     private void irlite$releaseGuideHandle(UIContext context, CallbackInfoReturnable<Boolean> cir)
     {
-        if (SpotGuideDrag.mouseReleased())
+        if (ClientRuntime.get().spotGuide().mouseReleased())
         {
             cir.setReturnValue(true);
         }
