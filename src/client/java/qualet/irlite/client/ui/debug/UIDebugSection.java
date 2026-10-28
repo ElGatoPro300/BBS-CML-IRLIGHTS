@@ -1,12 +1,12 @@
 package qualet.irlite.client.ui.debug;
 
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.ui.IRLightsUIKeys;
+
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.utils.UILabel;
 import mchorse.bbs_mod.ui.utils.UI;
-
-import qualet.irlite.client.diag.VlProfiler;
-import qualet.irlite.client.ui.IRLightsUIKeys;
 
 /** Debug controls rendered at the bottom of the IRLights presets section. */
 public final class UIDebugSection

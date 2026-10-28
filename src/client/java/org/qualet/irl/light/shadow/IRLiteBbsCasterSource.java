@@ -1,5 +1,15 @@
 package org.qualet.irl.light.shadow;
 
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.light.BbsMobSilhouette;
+import qualet.irlite.client.light.BbsModelSilhouette;
+import qualet.irlite.client.light.BbsSilhouetteBridge;
+import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+import qualet.irlite.mixin.client.bbs.FilmsAccessor;
+import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
+
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
@@ -55,16 +65,6 @@ import org.joml.Vector3f;
 import io.netty.util.collection.IntObjectMap;
 
 import java.util.List;
-
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.light.BbsMobSilhouette;
-import qualet.irlite.client.light.BbsModelSilhouette;
-import qualet.irlite.client.light.BbsSilhouetteBridge;
-import qualet.irlite.client.light.LightCollector;
-import qualet.irlite.forms.PointLightForm;
-import qualet.irlite.forms.SpotlightForm;
-import qualet.irlite.mixin.client.bbs.FilmsAccessor;
-import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 /**
  * The IRLite {@link ShadowCasterSource}: BBS Form/Film/Morph silhouettes — the

@@ -1,5 +1,10 @@
 package qualet.irlite.client.ui.forms.editors.panels;
 
+import qualet.irlite.client.light.ReplaySelection;
+import qualet.irlite.client.ui.replays.LightReplayPicker;
+import qualet.irlite.client.ui.replays.ReplayFilmContext;
+import qualet.irlite.forms.ValueReplaySelection;
+
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
@@ -10,11 +15,6 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.utils.UI;
 
 import java.util.function.Supplier;
-
-import qualet.irlite.client.light.ReplaySelection;
-import qualet.irlite.client.ui.replays.LightReplayPicker;
-import qualet.irlite.client.ui.replays.ReplayFilmContext;
-import qualet.irlite.forms.ValueReplaySelection;
 
 /**
  * The form-editor half of a replay list: the "selected replays only" switch and a

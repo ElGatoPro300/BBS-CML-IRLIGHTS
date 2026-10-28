@@ -1,5 +1,8 @@
 package qualet.irlite.client.ui.replays;
 
+import qualet.irlite.forms.LightForm;
+import qualet.irlite.forms.SpotlightForm;
+
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
@@ -7,9 +10,6 @@ import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 
 import java.util.Map;
-
-import qualet.irlite.forms.LightForm;
-import qualet.irlite.forms.SpotlightForm;
 
 /** Light-only sheet decoration; identical property names on other forms are unaffected. */
 public final class LightTrackLayout

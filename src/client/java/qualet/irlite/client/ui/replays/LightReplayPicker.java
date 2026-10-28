@@ -1,5 +1,7 @@
 package qualet.irlite.client.ui.replays;
 
+import qualet.irlite.client.light.ReplaySelection;
+
 import mchorse.bbs_mod.film.Film;
 import mchorse.bbs_mod.film.replays.Replay;
 import mchorse.bbs_mod.forms.entities.IEntity;
@@ -19,8 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-
-import qualet.irlite.client.light.ReplaySelection;
 
 /** Adapts Orbit/Tracker's actor picker to a light's set of replay IDs; owns no UI. */
 public final class LightReplayPicker

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-organize_imports.py - Formats, cleans, and organizes Java imports for bbs-irlights-addon (IRLite).
+organize_imports.py - Formats, cleans, and organizes Java imports for IRLights.
 
 Capabilities:
 1. Reorganizes and sorts imports into logical groups with blank line separators.
 2. Converts Fully Qualified Names (FQNs) in the Java code body into clean imports and short class names.
-3. Respects WHITELISTed classes to prevent ambiguous name collisions (e.g. BBS vs Minecraft Camera/Window/Framebuffer/Color, Iris conflicts).
-4. Preserves string literals, character literals, and comments (line comments, block comments, javadoc).
-5. Avoids redundant imports for java.lang.* and same-package classes.
-6. Prevents name collision if two different packages share the same simple class name.
-7. Preserves file headers/license comments and native line endings.
+3. Automatically detects and removes dead/unused imports (imports not referenced in the code body).
+4. Respects WHITELISTed classes to prevent ambiguous name collisions (e.g. java.lang.Math vs org.joml.Math).
+5. Preserves string literals, character literals, and comments (line comments, block comments, javadoc).
+6. Avoids redundant imports for java.lang.* and same-package classes.
+7. Prevents name collision if two different packages share the same simple class name.
+8. Preserves file headers/license comments and native line endings.
 
 Usage:
   python tools/organize_imports.py                      # Process all Java files in src/
@@ -29,18 +30,19 @@ import argparse
 # Configuration
 # -----------------------------------------------------------------------------
 
-# Locate project root (parent directory of 'tools')
+# Locate project root (handle execution from repo root or tools/ directory)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+if os.path.exists(os.path.join(SCRIPT_DIR, "src")):
+    PROJECT_ROOT = SCRIPT_DIR
+else:
+    PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 DEFAULT_JAVA_SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 
 # Import groups order
 IMPORT_GROUPS = [
-    # Project / Local Mod
+    # IRLights / Core / BBS host
     "qualet.irlite",
-    # Shared Core / IRL Engine
-    "org.qualet",
-    # BBS Mod
+    "org.qualet.irl",
     "mchorse.bbs_mod",
     "mchorse",
     # Fabric
@@ -53,6 +55,7 @@ IMPORT_GROUPS = [
     "me.jellysquid",
     # Mixin
     "org.spongepowered",
+    "com.llamalad7",
     # Math & Mojang & Libraries
     "org.joml",
     "com.mojang",
@@ -60,9 +63,16 @@ IMPORT_GROUPS = [
     "org.lwjgl",
     "io.netty",
     "org.slf4j",
-    # Standard Java
+    "org.apache",
+    "org.jetbrains",
+    "org.objectweb",
+    "it.unimi",
+    "com.ibm",
+    "joptsimple",
+    # Standard Java / JVM
     "java",
     "javax",
+    "sun",
     # Dev / Third-party
     "dev",
 ]
@@ -70,17 +80,27 @@ IMPORT_GROUPS = [
 # Classes that should remain fully qualified to avoid ambiguity.
 # If these are found as FQNs in code, they will NOT be simplified.
 # If they are already imported, they will be kept.
-WHITELIST = set()
+WHITELIST = {
+    "java.lang.Math",
+}
 
 # Regex for matching:
-# Group 1: String literals, character literals, block comments, and line comments (to be preserved untouched)
+# Group 1: Character literals, string literals, block comments, and line comments (to be preserved untouched)
 # Group 2: Fully qualified class names
 FQN_REGEX = re.compile(
-    r'("(?:\\.|[^"\\])*"'
-    r"|'[^'\\]*'"
+    r"('(?:\\.|[^'\\])*'"
+    r'|"(?:\\.|[^"\\])*"'
     r"|/\*[\s\S]*?\*/"
     r"|//[^\r\n]*)"
-    r"|\b((?:qualet|mchorse|net|com|org|java|javax|dev|io|me|joptsimple)\.(?:[a-z0-9_]+\.)+[A-Z][a-zA-Z0-9_]*)\b"
+    r"|\b((?:mchorse|net|com|org|java|javax|sun|dev|io|me|joptsimple|it)\.(?:[a-z0-9_]+\.)+[A-Z][a-zA-Z0-9_]*)\b"
+)
+
+# Stripper for literals and comments to check actual code usage
+STRIP_LITERALS_COMMENTS = re.compile(
+    r"('(?:\\.|[^'\\])*'"
+    r'|"(?:\\.|[^"\\])*"'
+    r"|/\*[\s\S]*?\*/"
+    r"|//[^\r\n]*)"
 )
 
 # Standard Java lang single-depth classes that don't need imports
@@ -272,22 +292,54 @@ def process_file(filepath, dry_run=False, verbose=False):
 
         new_body = FQN_REGEX.sub(replace_fqn, body)
 
-        # Filter redundant imports (e.g. same package or java.lang.*)
+        # Strip string literals, char literals, and comments to check actual code usage
+        code_only_body = STRIP_LITERALS_COMMENTS.sub(" ", new_body)
+
+        # Filter redundant and unused/dead imports
         filtered_imports = []
         for imp in imports:
-            if imp.startswith("import static "):
-                filtered_imports.append(imp)
+            s_imp = imp.strip().rstrip(';').strip()
+            if not s_imp:
                 continue
-            fqn = imp[len("import "):].strip()
+
+            if s_imp.startswith("import static "):
+                static_target = s_imp[len("import static "):].strip()
+                static_member = static_target.split('.')[-1]
+                # Wildcard static imports are kept
+                if static_member == "*":
+                    filtered_imports.append(s_imp)
+                    continue
+                # Check if static member is used in code
+                if re.search(r'\b' + re.escape(static_member) + r'\b', code_only_body):
+                    filtered_imports.append(s_imp)
+                continue
+
+            fqn = s_imp[len("import "):].strip()
             parts = fqn.split('.')
             class_name = parts[-1]
             pkg_name = ".".join(parts[:-1])
 
+            # Whitelisted imports are always kept
+            if fqn in WHITELIST:
+                filtered_imports.append(s_imp)
+                continue
+
+            # Wildcard imports are kept
+            if class_name == "*":
+                filtered_imports.append(s_imp)
+                continue
+
+            # Redundant: same package
             if pkg_name == current_package:
                 continue
+
+            # Redundant: java.lang single-depth classes
             if pkg_name == "java.lang" and class_name in JAVA_LANG_CLASSES:
                 continue
-            filtered_imports.append(imp)
+
+            # Check if class is actually used in code
+            if re.search(r'\b' + re.escape(class_name) + r'\b', code_only_body):
+                filtered_imports.append(s_imp)
 
         # Sort imports
         sorted_imps = sort_imports(filtered_imports)
@@ -339,7 +391,7 @@ def process_file(filepath, dry_run=False, verbose=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Clean, format, and organize imports for bbs-irlights-addon Java files."
+        description="Clean, format, and organize imports for IRLights Java files."
     )
     parser.add_argument(
         "targets",

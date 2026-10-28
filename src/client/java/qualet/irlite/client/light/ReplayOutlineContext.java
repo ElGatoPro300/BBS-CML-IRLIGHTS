@@ -1,5 +1,9 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.mixin.client.bbs.FilmsAccessor;
+
+import org.qualet.irl.light.shadow.ShadowBakeState;
+
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.film.BaseFilmController;
@@ -25,9 +29,6 @@ import io.netty.util.collection.IntObjectMap;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-
-import org.qualet.irl.light.shadow.ShadowBakeState;
-import qualet.irlite.mixin.client.bbs.FilmsAccessor;
 
 /**
  * Which replay is being drawn right now, as a small integer the shader can read.

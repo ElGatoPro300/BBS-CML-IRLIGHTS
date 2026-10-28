@@ -1,13 +1,5 @@
 package qualet.irlite.client;
 
-import mchorse.bbs_mod.api.BBSAddonMod;
-import mchorse.bbs_mod.api.Subscribe;
-import mchorse.bbs_mod.api.client.events.RegisterFormEditorsEvent;
-import mchorse.bbs_mod.api.client.events.RegisterFormRenderersEvent;
-import mchorse.bbs_mod.api.client.events.RegisterKeyframeEditorsEvent;
-import mchorse.bbs_mod.api.client.events.RegisterL10nEvent;
-import mchorse.bbs_mod.resources.Link;
-
 import qualet.irlite.client.forms.PointLightFormRenderer;
 import qualet.irlite.client.forms.SpotlightFormRenderer;
 import qualet.irlite.client.ui.forms.editors.forms.UIPointLightForm;
@@ -15,6 +7,14 @@ import qualet.irlite.client.ui.forms.editors.forms.UISpotlightForm;
 import qualet.irlite.client.ui.replays.UIReplaySelectionKeyframeFactory;
 import qualet.irlite.forms.PointLightForm;
 import qualet.irlite.forms.SpotlightForm;
+
+import mchorse.bbs_mod.api.BBSAddonMod;
+import mchorse.bbs_mod.api.Subscribe;
+import mchorse.bbs_mod.api.client.events.RegisterFormEditorsEvent;
+import mchorse.bbs_mod.api.client.events.RegisterFormRenderersEvent;
+import mchorse.bbs_mod.api.client.events.RegisterKeyframeEditorsEvent;
+import mchorse.bbs_mod.api.client.events.RegisterL10nEvent;
+import mchorse.bbs_mod.resources.Link;
 
 public class IrlightsClientAddon implements BBSAddonMod
 {

@@ -1,12 +1,13 @@
 package qualet.irlite.client.diag;
 
+import qualet.irlite.IrliteConfig;
+
+import org.qualet.irl.light.VlGlobalsBuffer;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
-import org.qualet.irl.light.VlGlobalsBuffer;
-import qualet.irlite.IrliteConfig;
 
 /**
  * Level-2 differential sweep of the VL march (deferred2) cost, unlocked by the

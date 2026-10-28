@@ -1,9 +1,10 @@
 package qualet.irlite.client.ui.replays;
 
+import qualet.irlite.forms.LightForm;
+
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.settings.values.base.BaseValue;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
-import qualet.irlite.forms.LightForm;
 
 import java.util.Map;
 

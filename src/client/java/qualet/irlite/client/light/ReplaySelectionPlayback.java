@@ -1,11 +1,11 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.forms.ValueReplaySelection;
+
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 import mchorse.bbs_mod.utils.keyframes.KeyframeChannel;
-
-import qualet.irlite.forms.ValueReplaySelection;
 
 /** New selection keys start at their own tick; legacy channels retain BBS's extrapolation. */
 public final class ReplaySelectionPlayback

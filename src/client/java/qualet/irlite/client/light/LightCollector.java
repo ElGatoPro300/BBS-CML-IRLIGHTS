@@ -1,5 +1,17 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.diag.VlProfiler;
+import qualet.irlite.client.light.cookie.CookieArray;
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
+
+import org.qualet.irl.light.LightBuffer;
+import org.qualet.irl.light.LightMath;
+import org.qualet.irl.light.LightRegistry;
+import org.qualet.irl.light.VlGlobalsBuffer;
+
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
@@ -32,17 +44,6 @@ import io.netty.util.collection.IntObjectMap;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.qualet.irl.light.LightBuffer;
-import org.qualet.irl.light.LightMath;
-import org.qualet.irl.light.LightRegistry;
-import org.qualet.irl.light.VlGlobalsBuffer;
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.diag.VlProfiler;
-import qualet.irlite.client.light.cookie.CookieArray;
-import qualet.irlite.forms.PointLightForm;
-import qualet.irlite.forms.SpotlightForm;
-import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 /**
  * Walks the loaded ModelBlockEntity forms each frame in pure world coordinates

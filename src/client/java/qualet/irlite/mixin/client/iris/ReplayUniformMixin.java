@@ -1,13 +1,15 @@
 package qualet.irlite.mixin.client.iris;
 
+import qualet.irlite.client.light.ReplayOutlineContext;
+
 import net.irisshaders.iris.gl.state.FogMode;
 import net.irisshaders.iris.gl.uniform.DynamicUniformHolder;
 import net.irisshaders.iris.uniforms.CommonUniforms;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qualet.irlite.client.light.ReplayOutlineContext;
 
 /**
  * {@code uniform int irlite_replayId}: the tag of the replay being drawn (0 = none), for

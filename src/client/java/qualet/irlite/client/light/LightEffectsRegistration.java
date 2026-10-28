@@ -1,11 +1,12 @@
 package qualet.irlite.client.light;
 
-import org.qualet.irl.light.LightProfile;
-import org.qualet.irl.light.LightRegistry;
 import qualet.irlite.IrliteConfig;
 import qualet.irlite.forms.LightEffects;
 import qualet.irlite.forms.LightForm;
 import qualet.irlite.forms.ValueReplaySelection;
+
+import org.qualet.irl.light.LightProfile;
+import org.qualet.irl.light.LightRegistry;
 
 import java.util.Objects;
 

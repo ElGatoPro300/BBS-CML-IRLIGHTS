@@ -1,11 +1,11 @@
 package qualet.irlite.client.ui.replays;
 
+import qualet.irlite.client.ui.forms.editors.panels.IrliteTrackpads;
+
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframes;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIFloatKeyframeFactory;
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
-
-import qualet.irlite.client.ui.forms.editors.panels.IrliteTrackpads;
 
 /** Keeps BBS numeric editing (auto keys, selection, undo, G and Bezier handles),
  * swapping only the value field for the same bounded slider used by our form panels. */

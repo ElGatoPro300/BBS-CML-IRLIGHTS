@@ -1,5 +1,10 @@
 package qualet.irlite.client.ui.forms.editors.panels;
 
+import qualet.irlite.IrliteConfig;
+import qualet.irlite.client.light.LightEffectsRegistration;
+import qualet.irlite.forms.LightEffects;
+import qualet.irlite.forms.LightForm;
+
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.numeric.ValueBoolean;
 import mchorse.bbs_mod.settings.values.numeric.ValueFloat;
@@ -16,11 +21,6 @@ import mchorse.bbs_mod.ui.utils.UI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-
-import qualet.irlite.IrliteConfig;
-import qualet.irlite.client.light.LightEffectsRegistration;
-import qualet.irlite.forms.LightEffects;
-import qualet.irlite.forms.LightForm;
 
 /**
  * A light's own volumetric settings (one tab) or its own outline settings plus the

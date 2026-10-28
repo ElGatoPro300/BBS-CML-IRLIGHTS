@@ -1,13 +1,15 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.forms.LightForm;
+
+import mchorse.bbs_mod.film.Film;
+import mchorse.bbs_mod.film.replays.Replay;
+import mchorse.bbs_mod.forms.forms.Form;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import mchorse.bbs_mod.film.Film;
-import mchorse.bbs_mod.film.replays.Replay;
-import mchorse.bbs_mod.forms.forms.Form;
-import qualet.irlite.forms.LightForm;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

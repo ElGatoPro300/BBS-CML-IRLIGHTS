@@ -1,19 +1,22 @@
 package qualet.irlite.client.forms;
 
+import qualet.irlite.client.light.IRLightPositionResolver;
+import qualet.irlite.client.light.LightEffectsRegistration;
+import qualet.irlite.client.light.cookie.CookieArray;
+import qualet.irlite.forms.SpotlightForm;
+
+import org.qualet.irl.light.LightMath;
+import org.qualet.irl.light.LightRegistry;
+
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 import mchorse.bbs_mod.utils.colors.Color;
+
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
-import qualet.irlite.client.light.IRLightPositionResolver;
-import qualet.irlite.client.light.cookie.CookieArray;
-import org.qualet.irl.light.LightMath;
-import org.qualet.irl.light.LightRegistry;
-import qualet.irlite.client.light.LightEffectsRegistration;
-import qualet.irlite.forms.SpotlightForm;
 
 public class SpotlightFormRenderer extends AbstractLightFormRenderer<SpotlightForm>
 {

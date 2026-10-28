@@ -1,5 +1,8 @@
 package qualet.irlite.client.forms;
 
+import qualet.irlite.client.ui.forms.editors.panels.UISpotlightFormPanel;
+import qualet.irlite.forms.SpotlightForm;
+
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.camera.Camera;
 import mchorse.bbs_mod.camera.CameraUtils;
@@ -27,9 +30,6 @@ import org.joml.Vector3f;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.WeakHashMap;
-
-import qualet.irlite.client.ui.forms.editors.panels.UISpotlightFormPanel;
-import qualet.irlite.forms.SpotlightForm;
 
 /**
  * Drag state + math for the interactive spotlight guide handles in the form

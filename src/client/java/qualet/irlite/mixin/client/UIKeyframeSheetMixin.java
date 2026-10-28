@@ -1,5 +1,7 @@
 package qualet.irlite.mixin.client;
 
+import qualet.irlite.client.ui.replays.LightTrackLayout;
+
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.settings.values.base.BaseValueBasic;
 import mchorse.bbs_mod.ui.framework.elements.input.keyframes.UIKeyframeSheet;
@@ -9,8 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import qualet.irlite.client.ui.replays.LightTrackLayout;
 
 @Mixin(UIKeyframeSheet.class)
 public abstract class UIKeyframeSheetMixin

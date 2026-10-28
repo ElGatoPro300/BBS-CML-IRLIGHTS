@@ -1,13 +1,19 @@
 package qualet.irlite.client.diag;
 
-import com.google.gson.GsonBuilder;
+import qualet.irlite.IrliteConfig;
+
+import org.qualet.irl.light.shadow.ShadowBaker;
+
 import net.fabricmc.loader.api.FabricLoader;
+
+import net.minecraft.client.MinecraftClient;
+
 import net.irisshaders.iris.Iris;
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
-import net.minecraft.client.MinecraftClient;
+
+import com.google.gson.GsonBuilder;
+
 import org.lwjgl.opengl.GL11;
-import org.qualet.irl.light.shadow.ShadowBaker;
-import qualet.irlite.IrliteConfig;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

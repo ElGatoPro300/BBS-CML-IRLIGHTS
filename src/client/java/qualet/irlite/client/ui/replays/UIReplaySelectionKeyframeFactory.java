@@ -1,5 +1,8 @@
 package qualet.irlite.client.ui.replays;
 
+import qualet.irlite.client.light.ReplaySelection;
+import qualet.irlite.forms.ValueReplaySelection;
+
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.film.UIFilmPanel;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
@@ -9,9 +12,6 @@ import mchorse.bbs_mod.ui.framework.elements.input.keyframes.factories.UIKeyfram
 import mchorse.bbs_mod.utils.keyframes.Keyframe;
 
 import java.util.List;
-
-import qualet.irlite.client.light.ReplaySelection;
-import qualet.irlite.forms.ValueReplaySelection;
 
 /** The selection and its activation travel together in the ordinary, undoable string keyframe. */
 public final class UIReplaySelectionKeyframeFactory extends UIKeyframeFactory<String>

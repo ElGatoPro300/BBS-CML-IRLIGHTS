@@ -1,13 +1,15 @@
 package qualet.irlite.mixin.client.bbs;
 
+import qualet.irlite.client.light.ShadowResourceRevision;
+import qualet.irlite.client.light.ShadowResourceVersions;
+
 import mchorse.bbs_mod.graphics.texture.Texture;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import qualet.irlite.client.light.ShadowResourceRevision;
-import qualet.irlite.client.light.ShadowResourceVersions;
 
 @Mixin(value = Texture.class, remap = false)
 public class TextureShadowRevisionMixin implements ShadowResourceRevision

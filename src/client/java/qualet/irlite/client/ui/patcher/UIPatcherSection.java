@@ -1,5 +1,14 @@
 package qualet.irlite.client.ui.patcher;
 
+import qualet.irlite.client.ui.IRLightsUIKeys;
+
+import org.qualet.irl.patcher.IrlPatch;
+import org.qualet.irl.patcher.IrlPatchApplier;
+import org.qualet.irl.patcher.IrlPatchParser;
+import org.qualet.irl.patcher.PatchLibrary;
+import org.qualet.irl.patcher.PatchResult;
+import org.qualet.irl.patcher.Shaderpacks;
+
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.UIScrollView;
@@ -21,14 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.qualet.irl.patcher.IrlPatch;
-import org.qualet.irl.patcher.IrlPatchApplier;
-import org.qualet.irl.patcher.IrlPatchParser;
-import org.qualet.irl.patcher.PatchLibrary;
-import org.qualet.irl.patcher.PatchResult;
-import org.qualet.irl.patcher.Shaderpacks;
-import qualet.irlite.client.ui.IRLightsUIKeys;
 
 /** The IRLite shader patcher, rendered as controls inside the IRLite settings section. */
 public final class UIPatcherSection

@@ -1,5 +1,8 @@
 package qualet.irlite;
 
+import qualet.irlite.forms.PointLightForm;
+import qualet.irlite.forms.SpotlightForm;
+
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.api.BBSAddonMod;
 import mchorse.bbs_mod.api.Subscribe;
@@ -13,9 +16,6 @@ import mchorse.bbs_mod.settings.SettingsBuilder;
 import mchorse.bbs_mod.ui.utils.icons.Icons;
 
 import java.io.File;
-
-import qualet.irlite.forms.PointLightForm;
-import qualet.irlite.forms.SpotlightForm;
 
 /** Registers IRLights as its own settings module: an own icon in the overlay's
  *  module strip and an own config/bbs/settings/irlights.json, instead of two

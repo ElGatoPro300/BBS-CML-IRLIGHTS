@@ -1,17 +1,20 @@
 package qualet.irlite.mixin.client;
 
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.qualet.irl.light.FramePipeline;
-import org.qualet.irl.light.iris.IrisShadersState;
 import qualet.irlite.client.diag.VlProfiler;
 import qualet.irlite.client.forms.WorldLightGuideOverlay;
 import qualet.irlite.client.light.LightCollector;
 import qualet.irlite.client.light.ReplayOutlineContext;
+
+import org.qualet.irl.light.FramePipeline;
+import org.qualet.irl.light.iris.IrisShadersState;
+
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.RenderTickCounter;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public class GameRendererLightMixin
