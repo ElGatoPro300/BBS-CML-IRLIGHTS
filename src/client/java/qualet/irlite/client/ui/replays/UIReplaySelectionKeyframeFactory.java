@@ -36,16 +36,7 @@ public final class UIReplaySelectionKeyframeFactory extends UIKeyframeFactory<St
 
     private UIFilmPanel filmPanel()
     {
-        UIFilmPanel panel = this.getParent(UIFilmPanel.class);
-
-        if (panel == null && this.getContext() != null)
-        {
-            List<UIFilmPanel> panels = this.getContext().menu.main.getChildren(UIFilmPanel.class);
-
-            panel = panels.isEmpty() ? null : panels.get(0);
-        }
-
-        return panel;
+        return ReplayFilmContext.find(this);
     }
 
     private ReplaySelection.Selection selection()

@@ -9,11 +9,11 @@ import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
 import mchorse.bbs_mod.ui.utils.UI;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import qualet.irlite.client.light.ReplaySelection;
 import qualet.irlite.client.ui.replays.LightReplayPicker;
+import qualet.irlite.client.ui.replays.ReplayFilmContext;
 import qualet.irlite.forms.ValueReplaySelection;
 
 /**
@@ -65,23 +65,7 @@ public final class LightReplayWidgets
 
     private UIFilmPanel filmPanel()
     {
-        UIContext context = this.owner.getContext();
-
-        if (context == null)
-        {
-            return null;
-        }
-
-        UIFilmPanel panel = this.owner.getParent(UIFilmPanel.class);
-
-        if (panel == null)
-        {
-            List<UIFilmPanel> panels = context.menu.main.getChildren(UIFilmPanel.class);
-
-            panel = panels.isEmpty() ? null : panels.get(0);
-        }
-
-        return panel;
+        return ReplayFilmContext.find(this.owner);
     }
 
     private String describe()
