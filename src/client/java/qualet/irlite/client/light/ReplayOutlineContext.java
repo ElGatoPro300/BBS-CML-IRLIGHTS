@@ -203,6 +203,32 @@ public final class ReplayOutlineContext
         }
     }
 
+    /** Retain replay ownership when CML postpones geometry until a later render pass. */
+    public static Runnable captureDeferred(Runnable draw)
+    {
+        if (draw == null)
+        {
+            return null;
+        }
+
+        int captured = currentId;
+
+        return () ->
+        {
+            int previous = currentId;
+            set(captured);
+
+            try
+            {
+                draw.run();
+            }
+            finally
+            {
+                set(previous);
+            }
+        };
+    }
+
     /**
      * Render {@code renderer} under its entity's or owning root form's replay tag. Called in place of
      * {@code FormRenderer.render} by {@code FormUtilsClientMixin}.

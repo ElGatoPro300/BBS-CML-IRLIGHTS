@@ -25,7 +25,11 @@
     "iris.ReplayUniformMixin",
     "iris.SamplerBindingCubeArrayMixin",
     "UIKeyframeSheetMixin",
-    "IRLightsCategoryIconMixin"
+    "IRLightsCategoryIconMixin",
+    "bbs.SoftDrawQueueMixin",
+    "bbs.SoftEntryRunnerMixin",
+    "bbs.SoftDrawGateMixin",
+    "iris.SoftBlendMixin"
   ],
   "injectors": {
     "defaultRequire": 1
