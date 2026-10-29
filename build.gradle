@@ -1,7 +1,18 @@
 plugins {
-    id 'fabric-loom' version '1.17-SNAPSHOT'
+    id 'fabric-loom' version '1.17-SNAPSHOT' apply false
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
     id 'maven-publish'
 }
+
+/* The matrix coordinator never loads a target's Loom project in its own process. */
+if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'buildAll' }) {
+    apply from: 'gradle/build-all.gradle'
+    return
+}
+
+def requestedMinecraft = providers.gradleProperty('mc').getOrElse(project.minecraft_version)
+def officialNamespace = requestedMinecraft.startsWith('26.')
+apply plugin: officialNamespace ? 'net.fabricmc.fabric-loom' : 'fabric-loom'
 
 apply from: 'gradle/minecraft-targets.gradle'
 def target = minecraftTarget
@@ -30,23 +41,55 @@ loom {
     }
 }
 
+def generatedOfficial = file('build/source-bridge/official')
+if (officialNamespace) {
+    def prepareSources = tasks.register('prepareOfficialSources', Exec) {
+        inputs.files(['src/main/java', 'src/domain/java', 'src/client/java',
+            'src/platform/mc12111/client/java', 'src/platform/casterModern/client/java',
+            'src/platform/iris18/client/java', 'src/platform/irisModernProfile/client/java',
+            'src/platform/blendSetup/client/java'].collect { fileTree(it) { include '**/*.java' } })
+        inputs.files(fileTree('tools/source_bridge'), fileTree('gradle/source-bridge') { include '*.gradle', 'gradle.properties' })
+        inputs.file 'gradle/minecraft-targets.json'
+        inputs.files(fileTree('tools') { include '**/*.java', 'fixture_adapters.py' })
+        def bridgeLibraries = new File(file(providers.gradleProperty('libDir').getOrElse('lib')), '1.21.11')
+        inputs.files fileTree(bridgeLibraries) { include '*.jar' }
+        outputs.dir generatedOfficial
+        commandLine new File(projectDir, System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : 'gradlew'),
+            '-p', file('gradle/source-bridge'), 'prepareOfficialSources', '--console=plain'
+        if (providers.gradleProperty('libDir').isPresent()) {
+            args '-PlibDir=' + file(providers.gradleProperty('libDir').get()).absolutePath
+        }
+    }
+    tasks.withType(JavaCompile).configureEach { dependsOn prepareSources }
+    tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareSources }
+}
 sourceSets {
-    main.java.srcDir 'src/domain/java'
-    client.java.srcDirs "src/platform/${target.minecraftAdapter}/client/java", "src/platform/${target.irisAdapter}/client/java"
+    if (officialNamespace) {
+        main.java.setSrcDirs([new File(generatedOfficial, 'main'), new File(generatedOfficial, 'domain')])
+        client.java.setSrcDirs([new File(generatedOfficial, 'client'), new File(generatedOfficial, 'caster')])
+    } else {
+        main.java.srcDir 'src/domain/java'
+    }
+    client.java.srcDirs "src/platform/${target.minecraftAdapter}/client/java",
+        "src/platform/${officialNamespace ? (target.depthAdapter ?: 'empty') : (target.casterAdapter ?: 'casterImmediate')}/client/java",
+        "src/platform/${target.irisAdapter}/client/java",
+        "src/platform/${target.irisProfileAdapter ?: 'irisLegacyProfile'}/client/java",
+        "src/platform/${target.blendAdapter ?: (target.shaderBlendMethod == 'bind' ? 'blendBind' : 'blendApply')}/client/java"
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation files(localCmlJar)
-    modImplementation localCoreCoordinate
+    if (!officialNamespace) mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    def implementationScope = officialNamespace ? 'implementation' : 'modImplementation'
+    add(implementationScope, "net.fabricmc:fabric-loader:${project.loader_version}")
+    add(implementationScope, "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
+    add(implementationScope, files(localCmlJar))
+    add(implementationScope, localCoreCoordinate)
     include localCoreCoordinate
-    modImplementation "maven.modrinth:sodium:${target.sodium}"
-    modImplementation "maven.modrinth:iris:${target.iris}"
-    modImplementation 'org.anarres:jcpp:1.4.14'
-    modImplementation 'io.github.douira:glsl-transformer:2.0.0-pre13'
+    add(implementationScope, "maven.modrinth:sodium:${target.sodium}")
+    add(implementationScope, "maven.modrinth:iris:${target.iris}")
+    add(implementationScope, 'org.anarres:jcpp:1.4.14')
+    add(implementationScope, "io.github.douira:glsl-transformer:${target.glslTransformer ?: '2.0.0-pre13'}")
 }
 
 processResources {
@@ -61,10 +104,11 @@ tasks.named('processClientResources') {
         into 'assets/irlite/patches'
     }
     inputs.property('javaVersion', target.java)
-    filesMatching('irlite.client.mixins.json') { expand java_version: target.java }
+    inputs.property('classicShadowDepth', target.classicShadowDepth ?: false)
+    filesMatching('irlite.client.mixins.json') { expand java_version: target.java, native_depth_mixin: target.classicShadowDepth ? ',"bbs.ClassicShadowDepthMixin"' : '' }
 }
 processResources {
-    filesMatching('irlite.mixins.json') { expand java_version: target.java }
+    filesMatching('irlite.mixins.json') { expand java_version: target.java, native_depth_mixin: target.classicShadowDepth ? ',"bbs.ClassicShadowDepthMixin"' : '' }
 }
 
 tasks.withType(JavaCompile).configureEach {

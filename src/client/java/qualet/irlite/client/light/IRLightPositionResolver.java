@@ -1,8 +1,9 @@
 package qualet.irlite.client.light;
 
+import qualet.irlite.platform.RenderApi;
+
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.util.math.Vec3d;
 
@@ -36,14 +37,14 @@ public final class IRLightPositionResolver
      *  must not be the context stack's own position matrix. */
     public static Vector3d resolve(FormRenderingContext context, Matrix4f matrix)
     {
-        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
+        Camera camera = RenderApi.camera();
 
         // The rotation part still comes from the camera: callers transform directions
         // with it (a translation-free use the view-rotation desync does not affect).
         matrix.set(new Matrix3f().rotation(camera.getRotation()));
         matrix.mul(context.stack.peek().getPositionMatrix());
 
-        Vec3d cam = camera.getPos();
+        Vec3d cam = RenderApi.cameraPosition(camera);
 
         return new Vector3d(cam.x + matrix.m30(), cam.y + matrix.m31(), cam.z + matrix.m32());
     }

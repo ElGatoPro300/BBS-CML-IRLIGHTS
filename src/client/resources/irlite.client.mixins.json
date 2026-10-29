@@ -29,7 +29,7 @@
     "bbs.SoftDrawQueueMixin",
     "bbs.SoftEntryRunnerMixin",
     "bbs.SoftDrawGateMixin",
-    "iris.SoftBlendMixin"
+    "iris.SoftBlendMixin"${native_depth_mixin}
   ],
   "injectors": {
     "defaultRequire": 1

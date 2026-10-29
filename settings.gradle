@@ -5,3 +5,21 @@ pluginManagement {
     }
 }
 // CML and Core are selected from lib/<minecraft_version> by gradle/local-libraries.gradle.
+
+/* Isolate Loom launch metadata when switching Minecraft targets. */
+def targetVersion = providers.gradleProperty('mc').orNull
+if (targetVersion == null)
+{
+    def defaults = new Properties()
+    file('gradle.properties').withInputStream { defaults.load(it) }
+    targetVersion = defaults.getProperty('minecraft_version')
+}
+if (!(targetVersion ==~ /[0-9]+\.[0-9]+(?:\.[0-9]+)?/))
+{
+    throw new GradleException("Invalid Minecraft target: ${targetVersion}")
+}
+if (gradle.startParameter.projectCacheDir == null)
+{
+    gradle.startParameter.projectCacheDir = file(gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'buildAll' }
+        ? '.gradle/build-all' : ".gradle/targets/${targetVersion}")
+}

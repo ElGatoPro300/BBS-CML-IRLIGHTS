@@ -2,6 +2,7 @@ package qualet.irlite.client.light;
 
 import qualet.irlite.client.runtime.ClientRuntime;
 import qualet.irlite.mixin.client.bbs.FilmsAccessor;
+import qualet.irlite.platform.RenderApi;
 
 import org.qualet.irl.light.shadow.ShadowBakeState;
 
@@ -17,11 +18,8 @@ import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.forms.renderers.ModelFormRenderer;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
 
 import net.irisshaders.iris.gl.state.ValueUpdateNotifier;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 
 import org.lwjgl.opengl.GL11;
 
@@ -170,7 +168,6 @@ public final class ReplayOutlineContext
             return;
         }
 
-        VertexConsumerProvider.Immediate consumers = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
 
         /* ModelFormRenderer draws cubic BBS models and BOBJ/OBJ through BBS's own
          * immediate/VAO pipeline. It never queues their faces in Minecraft's shared
@@ -195,7 +192,7 @@ public final class ReplayOutlineContext
             return;
         }
 
-        drawPreservingCull(consumers);
+        drawPreservingCull();
         set(id);
 
         try
@@ -206,7 +203,7 @@ public final class ReplayOutlineContext
         {
             try
             {
-                drawPreservingCull(consumers);
+                drawPreservingCull();
             }
             finally
             {
@@ -217,7 +214,7 @@ public final class ReplayOutlineContext
 
     /** A tag boundary may flush arbitrary vanilla layers. Do not let their
      * culling phase become the input state of the BBS renderer that follows. */
-    private static void drawPreservingCull(VertexConsumerProvider.Immediate consumers)
+    private static void drawPreservingCull()
     {
         boolean enabled = GL11.glIsEnabled(GL11.GL_CULL_FACE);
         int face = GL11.glGetInteger(GL11.GL_CULL_FACE_MODE);
@@ -225,7 +222,7 @@ public final class ReplayOutlineContext
 
         try
         {
-            consumers.draw();
+            RenderApi.flushEntityBuffers();
         }
         finally
         {
@@ -234,11 +231,11 @@ public final class ReplayOutlineContext
 
             if (enabled)
             {
-                RenderSystem.enableCull();
+                RenderApi.enableCull();
             }
             else
             {
-                RenderSystem.disableCull();
+                RenderApi.disableCull();
             }
         }
     }

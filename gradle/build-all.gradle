@@ -1,0 +1,42 @@
+import groovy.json.JsonSlurper
+
+/* Run versions sequentially, with independent Gradle history and Loom caches. */
+tasks.register('buildAll') {
+    group = 'build'
+    description = 'Build every available Minecraft target and verify its packaged libraries.'
+    doLast {
+        if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)) {
+            throw new GradleException('buildAll requires Gradle to run on JDK 25 or newer.')
+        }
+        def targets = new JsonSlurper().parse(file('gradle/minecraft-targets.json'))
+        def versions = targets.findAll { version, spec -> spec.status == 'available' }.keySet()
+        def wrapper = file(System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows') ? 'gradlew.bat' : 'gradlew')
+        def execute = { List command ->
+            def process = providers.exec {
+                workingDir projectDir
+                commandLine command
+                ignoreExitValue = true
+            }
+            def result = process.result.get()
+            if (result.exitValue != 0) {
+                logger.error(process.standardOutput.asText.get())
+                logger.error(process.standardError.asText.get())
+            }
+            result.assertNormalExitValue()
+            process.standardOutput.asText.get()
+        }
+        versions.each { version ->
+            logger.lifecycle("Building Minecraft ${version}")
+            def command = [wrapper.absolutePath, 'build', "-Pmc=${version}", '--project-cache-dir',
+                file(".gradle/targets/${version}").absolutePath, '--console=plain']
+            if (providers.gradleProperty('libDir').isPresent()) {
+                command.add('-PlibDir=' + file(providers.gradleProperty('libDir').get()).absolutePath)
+            }
+            execute(command)
+        }
+        def verify = ['python', file('tools/verify-target-bundles.py').absolutePath]
+        versions.each { version -> verify.addAll(['--mc', version]) }
+        logger.lifecycle(execute(verify))
+        logger.lifecycle("Built and verified ${versions.size()} Minecraft targets.")
+    }
+}

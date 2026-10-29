@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import zipfile
+from fixture_adapters import adapt_fixture
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,11 +34,13 @@ def run_check(mc, name, source, entrypoint, marker, shaderpack=None, extra_sourc
             shutil.copy2(source_pack, destination)
         options.append("-Dirlite.softCheck.shaderpack=" + pack_name)
     gradle = str(ROOT / ("gradlew.bat" if os.name == "nt" else "gradlew"))
-    command = [gradle, "-Pmc=" + mc, "--console=plain"]
+    command = [gradle, "-Pmc=" + mc, "--project-cache-dir", str(ROOT / ".gradle/targets" / mc), "--console=plain"]
     subprocess.run(command + ["build", "profileTestClasspath", "-I", "tools/profiles/classpath.init.gradle"], cwd=ROOT, check=True)
     classpath = (build / "profiles-bbs-test/classpath.txt").read_text(encoding="utf-8")
     args = output / "compile.args"
-    values = ["--release", "17", "-encoding", "UTF-8", "-proc:none", "-cp", classpath, "-d", str(output), str(ROOT / source)] + [str(path) for path in extra_sources]
+    spec = json.loads((ROOT / "gradle/minecraft-targets.json").read_text())[mc]
+    source = adapt_fixture(mc, ROOT / source, output)
+    values = ["--release", str(spec["java"]), "-encoding", "UTF-8", "-proc:none", "-cp", classpath, "-d", str(output), str(ROOT / source)] + [str(path) for path in extra_sources]
     args.write_text("\n".join('"' + value.replace("\\", "/") + '"' for value in values), encoding="utf-8")
     subprocess.run([shutil.which("javac") or "javac", "@" + str(args)], cwd=ROOT, check=True)
     jar = output / (name + ".jar")

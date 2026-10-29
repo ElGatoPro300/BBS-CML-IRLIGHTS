@@ -15,7 +15,6 @@ import org.qualet.irl.patcher.Patcher;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 
@@ -40,7 +39,7 @@ public class IrliteClient implements ClientModInitializer {
         // hook below early-returns while it is off. The bake probe partitions
         // the shadow-bake GPU bracket into sibling segments at the core
         // bakeInner seams and feeds the per-window work counters.
-        HudRenderCallback.EVENT.register((ctx, tickDelta) -> VlProfiler.renderHud(ctx));
+        RenderApi.registerProfilerHud();
         ShadowEngine.installBakeProbe(new ShadowBakeProbe() {
             @Override
             public boolean detailedTimings() {

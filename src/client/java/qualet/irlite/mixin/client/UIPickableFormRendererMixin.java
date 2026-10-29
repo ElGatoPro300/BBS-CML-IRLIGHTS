@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Routes clicks on IRLite's spotlight guide handles (extra stencil-pick entries
- * registered by SpotlightFormRenderer) into {@link SpotGuideDrag} before BBS's
+ * registered by SpotlightFormRenderer) into {@link qualet.irlite.client.forms.SpotGuideDrag} before BBS's
  * own gizmo/bone picking runs, and drives the drag once per frame.
  */
 @Mixin(UIPickableFormRenderer.class)

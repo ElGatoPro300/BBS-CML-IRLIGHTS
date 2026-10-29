@@ -18,6 +18,7 @@ for mc in args.mc or [mc for mc, spec in targets.items() if spec["status"] == "a
     jar = root / "build/targets" / mc / "libs" / ("bbs-cml-irlights-" + version + "-" + mc + ".jar")
     with zipfile.ZipFile(jar) as archive:
         metadata = json.loads(archive.read("fabric.mod.json"))
+        assert not any(name.endswith("ClientCheck.class") for name in archive.namelist()), "Native test fixture was bundled"
         assert metadata["version"] == version + "-" + mc
         assert metadata["depends"]["minecraft"] == "=" + mc
         assert not any(name.startswith("META-INF/jars/bbs-") for name in archive.namelist())

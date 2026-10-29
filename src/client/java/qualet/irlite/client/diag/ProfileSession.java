@@ -3,8 +3,6 @@ package qualet.irlite.client.diag;
 import org.qualet.irl.light.LightRegistry;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
 
 import net.irisshaders.iris.shaderpack.programs.ProgramSource;
 
@@ -685,7 +683,7 @@ public final class ProfileSession
 
     /** HudRenderCallback, registered unconditionally in IrliteClient — so it
      *  carries its own gate now instead of relying on never being hooked up. */
-    public void renderHud(DrawContext context)
+    public void renderHud(VlProfiler.HudCanvas context)
     {
         if (this.enabled)
         {
@@ -705,7 +703,7 @@ public final class ProfileSession
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc != null && mc.world != null && mc.inGameHud != null)
         {
-            mc.inGameHud.getChatHud().addMessage(Text.literal(message));
+            qualet.irlite.platform.RenderApi.chat(message);
         }
     }
     public void programSource(ProgramSource source)

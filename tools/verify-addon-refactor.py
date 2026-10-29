@@ -13,5 +13,8 @@ output.mkdir(parents=True, exist_ok=True)
 source = subprocess.check_output(["git", "show", "9c93d2a:src/client/java/org/qualet/irl/light/shadow/IRLiteBbsCasterSource.java"], cwd=ROOT, text=True, encoding="utf-8")
 source = source.replace("IRLiteBbsCasterSource", "LegacyBbsCasterSource")
 legacy = output / "LegacyBbsCasterSource.java"
+if mc == "1.21.4":
+    source = source.replace("LivingEntityRenderer.getOverlay(living, 0f)", "qualet.irlite.platform.RenderApi.overlay(living, tickDelta)")
+    source = source.replace("dispatcher.render(entity, cx, cy, cz, yaw, tickDelta, matrices, immediate, FULL_LIGHT)", "qualet.irlite.platform.RenderApi.renderEntity(entity, cx, cy, cz, yaw, tickDelta, matrices, immediate, FULL_LIGHT)")
 legacy.write_text(source, encoding="utf-8")
 run_check(mc, "addon-refactor", "tools/refactor/AddonRefactorClientCheck.java", "AddonRefactorClientCheck", "PASS: addon refactor native contracts", extra_sources=[legacy])

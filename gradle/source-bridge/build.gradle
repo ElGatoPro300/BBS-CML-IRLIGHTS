@@ -1,0 +1,113 @@
+import groovy.json.JsonSlurper
+import org.cadixdev.lorenz.MappingSet
+import org.cadixdev.mercury.Mercury
+import org.cadixdev.mercury.mixin.MixinRemapper
+import org.cadixdev.mercury.remapper.MercuryRemapper
+
+plugins {
+    id 'fabric-loom' version '1.17-SNAPSHOT'
+}
+
+def addon = file('../..')
+def spec = new JsonSlurper().parse(new File(addon, 'gradle/minecraft-targets.json'))['1.21.11']
+ext.minecraft_version = '1.21.11'
+ext.irl_core_version = spec.coreVersion
+ext.localLibraryRoot = new File(addon, 'lib').absolutePath
+apply from: '../local-libraries.gradle'
+
+repositories {
+    maven { url = 'https://api.modrinth.com/maven' }
+    mavenCentral()
+}
+loom {
+    splitEnvironmentSourceSets()
+    mods { irlite { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+}
+sourceSets {
+    main.java.setSrcDirs([new File(addon, 'src/main/java'), new File(addon, 'src/domain/java')])
+    client.java.setSrcDirs([
+        new File(addon, 'src/client/java'),
+        new File(addon, "src/platform/${spec.minecraftAdapter}/client/java"),
+        new File(addon, "src/platform/${spec.casterAdapter}/client/java"),
+        new File(addon, "src/platform/${spec.irisAdapter}/client/java"),
+        new File(addon, "src/platform/${spec.irisProfileAdapter}/client/java"),
+        new File(addon, "src/platform/${spec.blendAdapter}/client/java")
+    ])
+}
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.11'
+    mappings 'net.fabricmc:yarn:1.21.11+build.6:v2'
+    modImplementation "net.fabricmc:fabric-loader:${spec.loader}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${spec.fabric}"
+    modImplementation files(localCmlJar)
+    modImplementation localCoreCoordinate
+    modImplementation "maven.modrinth:iris:${spec.iris}"
+    modImplementation "maven.modrinth:sodium:${spec.sodium}"
+    modImplementation 'org.anarres:jcpp:1.4.14'
+    modImplementation "io.github.douira:glsl-transformer:${spec.glslTransformer}"
+}
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
+    options.encoding = 'UTF-8'
+}
+
+def generated = new File(addon, 'build/source-bridge/official')
+def symbols = new File(addon, 'build/source-bridge/symbols.json')
+def groups = [
+    main: new File(addon, 'src/main/java'),
+    domain: new File(addon, 'src/domain/java'),
+    client: new File(addon, 'src/client/java'),
+    adapter: new File(addon, "src/platform/${spec.minecraftAdapter}/client/java"),
+    caster: new File(addon, "src/platform/${spec.casterAdapter}/client/java"),
+    profile: new File(addon, "src/platform/${spec.irisProfileAdapter}/client/java"),
+    blend: new File(addon, "src/platform/${spec.blendAdapter}/client/java"),
+    fixtures: new File(addon, "build/source-bridge/fixture-input")
+]
+tasks.register('prepareOfficialSources') {
+    dependsOn tasks.named('compileClientJava')
+    inputs.files(groups.values().collect { fileTree(it) { include '**/*.java' } })
+    inputs.files(fileTree(new File(addon, 'tools')) { include '**/*.java', 'fixture_adapters.py', 'source_bridge/*.py' })
+    inputs.files(localCoreJar, localCmlJar)
+    outputs.dir generated
+    doLast {
+        providers.exec {
+            commandLine 'python', new File(addon, 'tools/source_bridge/prepare_fixtures.py').absolutePath
+        }.result.get().assertNormalExitValue()
+        providers.exec {
+            commandLine 'python', new File(addon, 'tools/source_bridge/mappings.py').absolutePath,
+                '--cache', new File(gradle.gradleUserHomeDir, 'caches/fabric-loom').absolutePath,
+                '--output', symbols.absolutePath
+        }.result.get().assertNormalExitValue()
+        def mapping = MappingSet.create()
+        new JsonSlurper().parse(symbols).each { entry ->
+            def owner = mapping.getOrCreateClassMapping(entry.source)
+            owner.setDeobfuscatedName(entry.target)
+            entry.methods.each { method ->
+                owner.getOrCreateMethodMapping(method.source, method.descriptor).setDeobfuscatedName(method.target)
+            }
+            entry.fields.each { field ->
+                owner.getOrCreateFieldMapping(field.source, field.descriptor).setDeobfuscatedName(field.target)
+            }
+        }
+        groups.each { name, input ->
+            def output = new File(generated, name)
+            def resolvedOutput = output.canonicalFile.toPath()
+            if (!resolvedOutput.startsWith(generated.canonicalFile.toPath()) || resolvedOutput == generated.canonicalFile.toPath()) {
+                throw new GradleException("Unsafe generated source output: ${resolvedOutput}")
+            }
+            delete resolvedOutput.toFile()
+            def mercury = new Mercury()
+            mercury.setSourceCompatibilityFromRelease(21)
+            mercury.setEncoding(java.nio.charset.StandardCharsets.UTF_8)
+            def bridgeClasspath = (sourceSets.client.runtimeClasspath + sourceSets.client.output + sourceSets.main.output).files.findAll { it.exists() }
+            file('build/bridge-classpath.txt').text = bridgeClasspath.collect { it.absolutePath }.join(System.lineSeparator())
+            mercury.classPath.addAll(bridgeClasspath.collect { it.toPath() })
+            mercury.sourcePath.addAll(sourceSets.main.java.srcDirs.collect { it.toPath() })
+            mercury.sourcePath.addAll(sourceSets.client.java.srcDirs.collect { it.toPath() })
+            mercury.processors.add(MixinRemapper.create(mapping))
+            mercury.processors.add(MercuryRemapper.create(mapping))
+            mercury.rewrite(input.toPath(), output.toPath())
+            logger.lifecycle("Remapped canonical ${name} sources to official names")
+        }
+    }
+}

@@ -36,23 +36,87 @@
     "shaderBlendMethod": "applyBlendModes"
   },
   "1.21.4": {
-    "status": "pending",
-    "reason": "Requires compatible Core, Iris/Sodium dependencies and an audited Minecraft adapter."
+    "status": "available",
+    "java": 21,
+    "mappings": "1.21.4+build.8",
+    "loader": "0.20.1",
+    "fabric": "0.119.4+1.21.4",
+    "sodium": "mc1.21.4-0.6.13-fabric",
+    "iris": "1.8.8+1.21.4-fabric",
+    "minecraftAdapter": "mc1214",
+    "irisAdapter": "iris18",
+    "shaderBlendMethod": "bind"
   },
   "1.21.11": {
-    "status": "pending",
-    "reason": "Requires compatible Core, Iris/Sodium dependencies and an audited Minecraft adapter."
+    "status": "available",
+    "java": 21,
+    "mappings": "1.21.11+build.6",
+    "loader": "0.20.1",
+    "fabric": "0.141.6+1.21.11",
+    "sodium": "mc1.21.11-0.8.12-fabric",
+    "iris": "1.10.7+1.21.11-fabric",
+    "minecraftAdapter": "mc12111",
+    "irisAdapter": "iris18",
+    "shaderBlendMethod": "iris$setupState",
+    "casterAdapter": "casterModern",
+    "irisProfileAdapter": "irisModernProfile",
+    "coreVersion": "1.1.8",
+    "blendAdapter": "blendSetup",
+    "glslTransformer": "3.0.0-pre3"
   },
   "26.1": {
-    "status": "pending",
-    "reason": "Requires compatible Core, Iris/Sodium dependencies and an audited Minecraft adapter."
+    "status": "available",
+    "namespace": "official",
+    "java": 25,
+    "loader": "0.20.1",
+    "fabric": "0.145.1+26.1",
+    "sodium": "mc26.1.1-0.8.9-fabric",
+    "iris": "1.10.9+26.1-fabric",
+    "minecraftAdapter": "mc26",
+    "casterAdapter": "casterModern",
+    "irisAdapter": "iris18",
+    "irisProfileAdapter": "irisModernProfile",
+    "blendAdapter": "blendSetup",
+    "shaderBlendMethod": "iris$setupState",
+    "coreVersion": "1.1.8",
+    "glslTransformer": "3.0.0-pre3"
   },
   "26.2": {
-    "status": "pending",
-    "reason": "Requires compatible Core, Iris/Sodium dependencies and an audited Minecraft adapter."
+    "status": "available",
+    "namespace": "official",
+    "java": 25,
+    "loader": "0.20.1",
+    "fabric": "0.161.0+26.2",
+    "sodium": "mc26.2-0.9.2-fabric",
+    "iris": "1.11.4+26.2-fabric",
+    "minecraftAdapter": "mc262",
+    "casterAdapter": "casterModern",
+    "irisAdapter": "iris18",
+    "irisProfileAdapter": "iris262Profile",
+    "blendAdapter": "blendSetup",
+    "shaderBlendMethod": "iris$setupState",
+    "coreVersion": "1.1.8",
+    "glslTransformer": "3.0.0-pre3",
+    "classicShadowDepth": true,
+    "depthAdapter": "depth262"
   },
   "26.3": {
-    "status": "pending",
-    "reason": "Requires compatible Core, Iris/Sodium dependencies and an audited Minecraft adapter."
+    "status": "available",
+    "namespace": "official",
+    "java": 25,
+    "loader": "0.20.1",
+    "fabric": "0.163.0+26.3",
+    "sodium": "mc26.3-0.9.2-fabric",
+    "iris": "1.11.7+26.3-fabric",
+    "minecraftAdapter": "mc263",
+    "casterAdapter": "casterModern",
+    "irisAdapter": "iris18",
+    "irisProfileAdapter": "iris263Profile",
+    "blendAdapter": "blendSetup",
+    "shaderBlendMethod": "iris$setupState",
+    "coreVersion": "1.1.8",
+    "glslTransformer": "3.0.0-pre3",
+    "classicShadowDepth": true,
+    "depthAdapter": "depth263"
   }
 }

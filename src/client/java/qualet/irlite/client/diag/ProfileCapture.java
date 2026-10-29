@@ -1,6 +1,7 @@
 package qualet.irlite.client.diag;
 
 import qualet.irlite.IrliteConfig;
+import qualet.irlite.platform.RenderApi;
 
 import org.qualet.irl.light.shadow.ShadowBaker;
 
@@ -68,9 +69,9 @@ public final class ProfileCapture
         metadata.put("detailedShadowTimers", detailed);
         metadata.put("vlSweep", sweep);
         metadata.put("world", mc.world == null ? null : mc.world.getRegistryKey().getValue().toString());
-        metadata.put("camera", mc.gameRenderer.getCamera().getPos().toString());
-        metadata.put("cameraYaw", mc.gameRenderer.getCamera().getYaw());
-        metadata.put("cameraPitch", mc.gameRenderer.getCamera().getPitch());
+        metadata.put("camera", RenderApi.cameraPosition(RenderApi.camera()).toString());
+        metadata.put("cameraYaw", RenderApi.camera().getYaw());
+        metadata.put("cameraPitch", RenderApi.camera().getPitch());
         String json = new GsonBuilder().serializeNulls().create().toJson(metadata);
         System.out.println("[irlite] profile-session: " + json);
         if (!CSV) return;

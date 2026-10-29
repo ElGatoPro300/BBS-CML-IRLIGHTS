@@ -3,7 +3,7 @@ import java.util.jar.Manifest
 import java.util.zip.ZipFile
 
 /* Resolve only the two host libraries for the selected Minecraft target. Never load a mixed fileTree. */
-def libraryRoot = file(providers.gradleProperty('libDir').getOrElse('lib'))
+def libraryRoot = file(providers.gradleProperty('libDir').getOrElse(project.findProperty('localLibraryRoot') ?: 'lib'))
 def libraryFolder = new File(libraryRoot, project.minecraft_version)
 def inspect = { File jar ->
     new ZipFile(jar).withCloseable { zip ->
@@ -36,8 +36,9 @@ def select = { String id, String override ->
     if (entry.minecraft != project.minecraft_version) {
         throw new GradleException("Wrong Minecraft library: ${entry.file.name} was built for ${entry.minecraft ?: 'an unknown version'}, expected ${project.minecraft_version}.")
     }
-    if (entry.namespace != 'intermediary') {
-        throw new GradleException("Local library must be a remapped intermediary JAR: ${entry.file} (namespace ${entry.namespace ?: 'unknown'}).")
+    def expectedNamespace = project.findProperty('minecraftTarget')?.namespace ?: 'intermediary'
+    if (entry.namespace != expectedNamespace) {
+        throw new GradleException("Local library must use ${expectedNamespace} mappings: ${entry.file} (namespace ${entry.namespace ?: 'unknown'}).")
     }
     entry
 }
@@ -48,7 +49,9 @@ if (!(core.version == project.irl_core_version || core.version.startsWith(projec
 }
 ext.localCmlJar = cml.file
 ext.localCoreJar = core.file
-ext.localCoreCoordinate = "local.irlights:${core.file.name.substring(0, core.file.name.length() - 4)}:${core.version}"
+/* Local Core builds may change without a release bump; content identifies the Ivy module. */
+def coreDigest = java.security.MessageDigest.getInstance('SHA-256').digest(core.file.bytes).encodeHex().toString().substring(0, 12)
+ext.localCoreCoordinate = "local.irlights:${core.file.name.substring(0, core.file.name.length() - 4)}:${core.version}-${coreDigest}"
 
 /* A local Ivy module gives Loom the module capability required for nested JARs. */
 repositories {

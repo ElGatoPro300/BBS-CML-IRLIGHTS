@@ -10,13 +10,11 @@ import org.qualet.irl.light.shadow.ShadowBakeState;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.client.BBSShaders;
-import mchorse.bbs_mod.forms.CustomVertexConsumerProvider;
 import mchorse.bbs_mod.forms.forms.BodyPart;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
 import mchorse.bbs_mod.forms.renderers.FormRenderer;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
-import mchorse.bbs_mod.graphics.Draw;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.ui.utils.icons.Icon;
@@ -24,13 +22,9 @@ import mchorse.bbs_mod.utils.colors.Color;
 import mchorse.bbs_mod.utils.colors.Colors;
 
 import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.VertexFormats;
 
 import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 
 public abstract class AbstractLightFormRenderer<T extends Form> extends FormRenderer<T>
 {
@@ -196,15 +190,14 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
 
         Matrix4f matrix = context.stack.peek().getPositionMatrix();
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        RenderSystem.disableCull();
-        RenderSystem.setShaderColor(1F, 1F, 1F, 1F);
+        RenderApi.enableBlend();
+        RenderApi.defaultBlendFunc();
+        RenderApi.enableDepthTest();
+        RenderApi.disableCull();
+        RenderApi.setShaderColor(1F, 1F, 1F, 1F);
 
         /* icons.png is loaded by BBS as a bare GL texture; bind its id to unit 0. */
         BBSModClient.getTextures().bindTexture(icon.texture);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
 
 
         BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_TEXTURE_COLOR);
@@ -218,9 +211,9 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
         RenderApi.textureVertex(builder, matrix, x2, y2, z, u2, v1, c.r, c.g, c.b);
         RenderApi.textureVertex(builder, matrix, x1, y2, z, u1, v1, c.r, c.g, c.b);
 
-        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderApi.drawTextured(builder);
 
-        RenderSystem.enableCull();
+        RenderApi.enableCull();
 
         context.stack.pop();
     }
@@ -240,16 +233,7 @@ public abstract class AbstractLightFormRenderer<T extends Form> extends FormRend
         context.stack.push();
         context.stack.translate(-0.25, 0, -0.25);
 
-        CustomVertexConsumerProvider.hijackVertexFormat((layer) ->
-        {
-            this.setupTarget(context, BBSShaders.getPickerModelsProgram());
-            RenderSystem.setShader(BBSShaders::getPickerModelsProgram);
-        });
-
-        Draw.renderBox(context.stack, 0, 0, 0, 0.5, 0.5, 0.5, c.r, c.g, c.b);
-
-        CustomVertexConsumerProvider.clearRunnables();
-        RenderSystem.enableDepthTest();
+        RenderApi.pickBox(context, c, () -> this.setupTarget(context, BBSShaders.getPickerModelsProgram()));
 
         context.stack.pop();
     }

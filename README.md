@@ -114,7 +114,7 @@ IRLights has three layers that work together:
 
 ## Building from Source
 
-The shared source tree builds 1.20.1, 1.20.4 and 1.21.1 using small Minecraft/Iris adapters. Put matching remapped CML and IRL Core libraries in `lib/<version>/`; see [local libraries](lib/README.md). Core is embedded once, while CML remains an external required mod.
+The shared source tree selects Minecraft/Iris adapters for 1.20.1, 1.20.4, 1.21.1, 1.21.4, 1.21.11, 26.1, 26.2 and 26.3. Put matching production CML and IRL Core libraries in `lib/<version>/`; see [local libraries](lib/README.md). Core is embedded once, while CML remains an external required mod.
 
 ```bash
 ./gradlew build -Pmc=1.20.4
@@ -124,7 +124,7 @@ The shared source tree builds 1.20.1, 1.20.4 and 1.21.1 using small Minecraft/Ir
 ./gradlew runClient -Pmc=1.20.4 -PrunDir=build/manual-1.20.4
 ```
 
-Target dependencies live in `gradle/minecraft-targets.json`. Java 17 runs 1.20.x; Java 21 runs 1.21.1. The newer CML branches are recorded as pending until their dependencies and adapters are verified. See [architecture and verification status](docs/addon-refactor-status.md) before adding a target.
+Target dependencies and verification status live in `gradle/minecraft-targets.json`. Java 17 runs 1.20.x, Java 21 runs 1.21.x, and Java 25 runs 26.x. Run Gradle with Java 25 when building 26.x. For example: `./gradlew build -Pmc=26.3`. The official-name source bridge also requires the CML/Core libraries in `lib/1.21.11`; actual 26.x rendering uses its selected native adapter. See [architecture and verification status](docs/addon-refactor-status.md) before adding a target.
 
 ---
 
@@ -155,3 +155,5 @@ Released under the [MIT License](LICENSE) — © 2026 qualet.
 The shared lighting & patcher engine lives in [irl-core](https://github.com/quaIett/irl-core)
 (also MIT). Third-party shaderpacks referenced in `patches/` remain under the licenses of
 their respective authors.
+
+Build all available Minecraft targets with `./gradlew buildAll` (`.\gradlew.bat buildAll` in PowerShell), using JDK 25. This runs targets sequentially with isolated caches, stops on the first failure, then verifies each JAR's exact Core, metadata, bytecode and patch resources. `build` still builds only the selected/default target. All required CML/Core libraries must already be present; `-PlibDir` is supported.

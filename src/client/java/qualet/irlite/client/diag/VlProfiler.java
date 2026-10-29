@@ -2,11 +2,16 @@ package qualet.irlite.client.diag;
 
 import qualet.irlite.client.runtime.ClientRuntime;
 
-import net.minecraft.client.gui.DrawContext;
-
 /** Stateless compatibility bridge for Core and Iris callbacks. */
 public final class VlProfiler
 {
+    /** Engine-neutral drawing boundary for diagnostic HUD text. */
+    @FunctionalInterface
+    public interface HudCanvas
+    {
+        void text(String message, int x, int y, int color);
+    }
+
     public static final String PASS_BAKE = "bake-head";
     public static final String PASS_VL = "deferred2";
     private VlProfiler()
@@ -82,7 +87,7 @@ public final class VlProfiler
         ClientRuntime.get().profiler().overrideVlGlobals();
     }
 
-    public static void renderHud(DrawContext ctx)
+    public static void renderHud(HudCanvas ctx)
     {
         ClientRuntime.get().profiler().renderHud(ctx);
     }

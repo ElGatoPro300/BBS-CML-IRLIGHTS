@@ -4,13 +4,14 @@ import groovy.json.JsonSlurper
 def targets = new JsonSlurper().parse(file('gradle/minecraft-targets.json'))
 def selected = providers.gradleProperty('mc').getOrElse(project.minecraft_version)
 def target = targets[selected]
-if (target == null || target.status != 'available') {
+if (target == null || !(target.status in ['available', 'development'])) {
     throw new GradleException("Minecraft ${selected} is not available: ${target?.reason ?: 'unknown target'}. See gradle/minecraft-targets.json.")
 }
 ext.minecraft_version = selected
 ext.yarn_mappings = target.mappings
 ext.loader_version = target.loader
 ext.fabric_version = target.fabric
+ext.irl_core_version = target.coreVersion ?: project.irl_core_version
 ext.minecraftTarget = target
 layout.buildDirectory = file("build/targets/${selected}")
 /* Project property (not a JVM system property): prevents Loom upgrading the

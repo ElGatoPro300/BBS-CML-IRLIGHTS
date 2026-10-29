@@ -17,8 +17,8 @@ Keep one exact CML and Core production library per target in lib/<version>. Buil
 
 - src/domain/java: immutable replay selections, frame/world replay ownership and spotlight ray math. The domain fixture compiles against an empty engine classpath.
 - src/main/java/qualet/irlite/io: selection JSON encoding with unchanged serialized keys, order, modes and fail-closed behavior. CML Value fields and persistence remain adapters.
-- src/platform/mc120 and mc121: buffer submission, model-view stack operations, identifiers and exact GameRenderer injection signatures. GameRenderer callbacks delegate shared frame orchestration to LightFramePipeline.
-- src/platform/iris17 and iris18: exact Iris matrix and blending hooks. Hook mismatches remain required mixin failures rather than permissive fallbacks.
+- src/platform/mc120, mc121, mc1214, mc12111, mc26, mc262 and mc263: buffer submission, model-view stack operations, identifiers and exact GameRenderer injection signatures. GameRenderer callbacks delegate shared frame orchestration to LightFramePipeline.
+- src/platform/iris17 and iris18: exact Iris matrix hooks. Blend and profiler hooks are selected independently for their actual Iris pipeline family. Hook mismatches remain required mixin failures rather than permissive fallbacks.
 - LightCollector: coordinator with separate model-block and film sources, state-balanced form traversal, global parameter uploads and shared light submission.
 - IRLiteBbsCasterSource: Core contract coordinator with separate CasterCollector, CasterBounds and CasterGeometry. Candidate order and conservative unknown revisions remain unchanged.
 - ClientRuntime: bootstrap bridge to instance-owned replay state, guide drag state, pending guide snapshots, resource revisions, profiling sessions and patcher controller. World/disconnect cleanup is explicit; resource revision numbers survive world changes.
@@ -46,7 +46,7 @@ The soft fixture checks both CML queues, eight alpha values, the real Iris attac
 
 ## Remaining scope and honest compatibility limits
 
-Targets 1.21.4, 1.21.11, 26.1, 26.2 and 26.3 are recorded as pending. Matching Core builds, rendering dependency combinations and audited version hooks are required before marking any of them supported. Mapping/toolchain changes in 26.x may require a separate platform project; adding a version string is insufficient.
+Modern adapters and matching Core builds have been implemented for 1.21.4, 1.21.11, 26.1, 26.2 and 26.3. The target manifest records availability after focused native verification. See modern-version-port-plan.md for the source-symbol bridge, native render boundaries, Core matrix contract and exact verification scope.
 
 Full in-world acceptance still includes moving shadows on nested forms/model blocks, cookies, volumetrics, guide dragging and film keyframes/undo, resource reload, patcher writes and representative supported shaderpacks. Performance equivalence must be measured on a fixed scene before claiming FPS improvement. No user project was opened or modified by the focused fixtures.
 
@@ -56,4 +56,4 @@ The refactor does not introduce new UI text or translation keys. The existing 22
 
 The three existing targets passed build/remap and native Outline, soft/no-shading GPU and caster/data/lifecycle checks from this source tree. The standalone domain check passed 20,022 assertions. The existing light traversal math fixture passed 370,491 checks; guide overlay passed 20 snapshot/API checks on 1.21.1; profiler aggregation/CSV checks passed. Bundle validation checks exact embedded Core bytes, Java class versions, required mixin classes, metadata and all seven patch resource bytes. Machine-readable reports are generated under ignored build/refactor-checks.json and build/refactor-bundles.json.
 
-These results do not close the remaining native scene acceptance and localization audit listed above, and do not promote the five pending targets to supported.
+These focused results do not close the remaining native scene acceptance and localization audit listed above. Modern port checks and their remaining limits are recorded separately in modern-version-port-plan.md.

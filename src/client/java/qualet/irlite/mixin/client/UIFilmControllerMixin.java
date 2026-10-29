@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Film-editor counterpart of {@link UIPickableFormRendererMixin}: routes clicks
  * on IRLite's in-world spotlight guide handles (stencil entries registered for
- * the selected replay by SpotlightFormRenderer) into {@link SpotGuideDrag}
+ * the selected replay by SpotlightFormRenderer) into {@link qualet.irlite.client.forms.SpotGuideDrag}
  * before BBS's gizmo/replay picking. The per-frame drag update lives in
  * the native HUD render boundary.
  */

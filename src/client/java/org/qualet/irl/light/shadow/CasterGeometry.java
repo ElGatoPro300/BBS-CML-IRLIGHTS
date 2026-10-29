@@ -1,7 +1,8 @@
 package org.qualet.irl.light.shadow;
 
+import qualet.irlite.platform.RenderApi;
+
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
-import mchorse.bbs_mod.client.renderer.MorphRenderer;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.forms.Form;
@@ -11,41 +12,35 @@ import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.utils.MatrixStackUtils;
 import mchorse.bbs_mod.utils.pose.Transform;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
 
 /** Draws shortlisted casters; Core owns pass setup, flush and failure isolation. */
 final class CasterGeometry
 {
-    private static final int FULL_LIGHT = LightmapTextureManager.pack(15, 15);
+    private static final int FULL_LIGHT = RenderApi.fullLight();
 
     public void emit(Object caster, int type, float tickDelta, OccluderBatch batch)
     {
-        ImmediateOccluderBatch b = (ImmediateOccluderBatch) batch;
-        Camera cam = MinecraftClient.getInstance().gameRenderer.getCamera();
-        switch (type)
+        try (CasterPass pass = new CasterPass(batch))
         {
-            case CasterType.MODEL_BLOCK ->
-                drawModelBlock((ModelBlockEntity) caster, b.matrices(), b.immediate(), cam, tickDelta);
-            case CasterType.REPLAY ->
-                drawReplay((IEntity) caster, b.matrices(), cam, tickDelta);
-            default /* ENTITY */ ->
-                drawEntity((Entity) caster, b.matrices(), b.immediate(), tickDelta);
+            Camera camera = RenderApi.camera();
+            pass.draw(() ->
+            {
+                switch (type)
+                {
+                    case CasterType.MODEL_BLOCK -> drawModelBlock((ModelBlockEntity) caster, pass.matrices(), camera, tickDelta);
+                    case CasterType.REPLAY -> drawReplay((IEntity) caster, pass.matrices(), camera, tickDelta);
+                    default -> drawEntity((Entity) caster, pass, tickDelta);
+                }
+            });
         }
     }
 
-    private static void drawEntity(Entity entity, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, float tickDelta)
+    private static void drawEntity(Entity entity, CasterPass pass, float tickDelta)
     {
         // Light-relative bake: emit geometry relative to the pass anchor (= the
         // light view's origin, ShadowRenderer.currentOrigin*). Subtract in double
@@ -59,35 +54,10 @@ final class CasterGeometry
         double cz = MathHelper.lerp(tickDelta, entity.lastRenderZ, entity.getZ()) - oz;
         float yaw = entity.getYaw(tickDelta);
 
-        // BBS morph first so morphed players/actors bake their visible
-        // silhouette; vanilla dispatcher is the fallback.
-        boolean rendered = false;
-        if (entity instanceof AbstractClientPlayerEntity player)
-        {
-            matrices.push();
-            matrices.translate(cx, cy, cz);
-            rendered = MorphRenderer.renderPlayer(player, yaw, tickDelta, matrices, immediate, FULL_LIGHT);
-            matrices.pop();
-        }
-        if (!rendered && entity instanceof LivingEntity living)
-        {
-            int overlay = LivingEntityRenderer.getOverlay(living, 0F);
-            matrices.push();
-            matrices.translate(cx, cy, cz);
-            rendered = MorphRenderer.renderLivingEntity(living, yaw, tickDelta, matrices, immediate, FULL_LIGHT, overlay);
-            matrices.pop();
-        }
-        if (!rendered)
-        {
-            EntityRenderDispatcher dispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
-            if (dispatcher != null)
-            {
-                dispatcher.render(entity, cx, cy, cz, yaw, tickDelta, matrices, immediate, FULL_LIGHT);
-            }
-        }
+        pass.renderEntity(entity, cx, cy, cz, yaw, tickDelta, FULL_LIGHT);
     }
 
-    private static void drawModelBlock(ModelBlockEntity mbe, MatrixStack matrices, VertexConsumerProvider.Immediate immediate, Camera camera, float tickDelta)
+    private static void drawModelBlock(ModelBlockEntity mbe, MatrixStack matrices, Camera camera, float tickDelta)
     {
         if (mbe.getProperties() == null)
         {
@@ -154,7 +124,7 @@ final class CasterGeometry
 
         matrices.push();
         matrices.translate(fx, fy, fz);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-bodyYaw));
+        RenderApi.rotateYaw(matrices, -bodyYaw);
         FormRenderer<?> renderer = FormUtilsClient.getRenderer(form);
         if (renderer != null)
         {

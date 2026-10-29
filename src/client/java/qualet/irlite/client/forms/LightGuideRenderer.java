@@ -8,14 +8,10 @@ import mchorse.bbs_mod.utils.Axis;
 import mchorse.bbs_mod.utils.colors.Color;
 
 import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 
 import org.joml.Matrix4f;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 
 import java.util.function.Consumer;
 
@@ -79,21 +75,20 @@ final class LightGuideRenderer
 
     private static void renderTriangles(Consumer<BufferBuilder> consumer)
     {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderApi.enableBlend();
+        RenderApi.defaultBlendFunc();
+        RenderApi.disableCull();
+        RenderApi.depthMask(false);
+        RenderApi.disableDepthTest();
 
         BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
-        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderApi.drawColor(builder, false);
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
+        RenderApi.enableDepthTest();
+        RenderApi.depthMask(true);
+        RenderApi.enableCull();
     }
 
     private static void coneWire(BufferBuilder builder, MatrixStack stack, float capZ, float radius, float t, Color color, float alpha)
@@ -247,21 +242,20 @@ final class LightGuideRenderer
      */
     private static void renderStencilTriangles(Consumer<BufferBuilder> consumer)
     {
-        RenderSystem.disableBlend();
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        RenderApi.disableBlend();
+        RenderApi.disableCull();
+        RenderApi.depthMask(false);
+        RenderApi.disableDepthTest();
 
         BufferBuilder builder = RenderApi.begin(VertexFormats.POSITION_COLOR);
         consumer.accept(builder);
 
-        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderApi.drawColor(builder, true);
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.enableBlend();
+        RenderApi.enableDepthTest();
+        RenderApi.depthMask(true);
+        RenderApi.enableCull();
+        RenderApi.enableBlend();
     }
 
     private static float clamp(float value, float min, float max)
