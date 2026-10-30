@@ -8,7 +8,7 @@ lib/1.20.4/  # CML for 1.20.4 + IRL Core built for 1.20.4
 lib/1.21.1/  # CML for 1.21.1 + IRL Core built for 1.21.1
 ```
 
-Run `gradlew build -Pmc=1.20.4` (or another available target) from this shared source tree. Outputs go to `build/targets/<version>/libs/`. Java 17 bytecode is used for 1.20.x; Java 21 for 1.21.x, and Java 25 for 26.x.
+Run `gradlew build -Pmc=1.20.4` (or another available target) from this shared source tree. Installable JARs are collected in `build/libs/`; detailed per-target outputs remain in `build/targets/<version>/libs/`. Java 17 bytecode is used for 1.20.x; Java 21 for 1.21.x, and Java 25 for 26.x.
 
 The build checks mod IDs, the exact `Fabric-Minecraft-Version` manifest attribute and the mapping namespace: `intermediary` for 1.20.x/1.21.x, `official` for 26.x. It rejects missing, duplicate or mismatched libraries. An old filename ending in `1.20.jar` does not establish compatibility with both 1.20.1 and 1.20.4.
 

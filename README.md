@@ -118,7 +118,7 @@ The shared source tree selects Minecraft/Iris adapters for 1.20.1, 1.20.4, 1.21.
 
 ```bash
 ./gradlew build -Pmc=1.20.4
-# output: build/targets/1.20.4/libs/bbs-cml-irlights-<version>-1.20.4.jar
+# output: build/libs/bbs-cml-irlights-<version>-1.20.4.jar
 ./gradlew build -Pmc=1.20.1
 ./gradlew build -Pmc=1.21.1
 ./gradlew runClient -Pmc=1.20.4 -PrunDir=build/manual-1.20.4
@@ -157,3 +157,5 @@ The shared lighting & patcher engine lives in [irl-core](https://github.com/quaI
 their respective authors.
 
 Build all available Minecraft targets with `./gradlew buildAll` (`.\gradlew.bat buildAll` in PowerShell), using JDK 25. This runs targets sequentially with isolated caches, stops on the first failure, then verifies each JAR's exact Core, metadata, bytecode and patch resources. `build` still builds only the selected/default target. All required CML/Core libraries must already be present; `-PlibDir` is supported.
+
+Both `build` and `buildAll` collect installable JARs in `build/libs/`, named with their Minecraft version. Per-target build outputs remain under `build/targets/<version>/`. Source and development JARs are not copied into the common folder.

@@ -37,6 +37,6 @@ tasks.register('buildAll') {
         def verify = ['python', file('tools/verify-target-bundles.py').absolutePath]
         versions.each { version -> verify.addAll(['--mc', version]) }
         logger.lifecycle(execute(verify))
-        logger.lifecycle("Built and verified ${versions.size()} Minecraft targets.")
+        logger.lifecycle("Built and verified ${versions.size()} Minecraft targets. Installable JARs: build/libs/")
     }
 }

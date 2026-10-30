@@ -157,3 +157,20 @@ publishing {
         mavenJava(MavenPublication) { from components.java }
     }
 }
+
+/* Collect only the installable artifact; each target owns one uniquely named file. */
+def productionJar = tasks.named(officialNamespace ? 'jar' : 'remapJar')
+def collectedJar = productionJar.flatMap { it.archiveFile }.map { file("build/libs/${it.asFile.name}") }
+def collectReleaseJar = tasks.register('collectReleaseJar') {
+    dependsOn productionJar
+    mustRunAfter tasks.named('check')
+    inputs.file productionJar.flatMap { it.archiveFile }
+    outputs.file collectedJar
+    doLast {
+        copy {
+            from productionJar.flatMap { it.archiveFile }
+            into file('build/libs')
+        }
+    }
+}
+tasks.named('build') { dependsOn collectReleaseJar }
