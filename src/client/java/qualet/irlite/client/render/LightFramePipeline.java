@@ -2,6 +2,7 @@ package qualet.irlite.client.render;
 
 import qualet.irlite.client.diag.VlProfiler;
 import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.client.light.ModelBlockScan;
 import qualet.irlite.client.light.ReplayOutlineContext;
 import qualet.irlite.client.runtime.ClientRuntime;
 
@@ -20,6 +21,7 @@ public final class LightFramePipeline
     {
         ClientRuntime.get().beginFrame(MinecraftClient.getInstance().world);
         ClientRuntime.get().guides().beginFrame();
+        ModelBlockScan.beginFrame();
         // Dev VL profiler (-Dirlite.profileVl=true): the shadow bake below runs
         // strictly before the Iris pass sequence, so its GL_TIME_ELAPSED bracket
         // never nests with the per-pass brackets. collect/prioritize inside

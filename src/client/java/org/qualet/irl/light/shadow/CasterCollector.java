@@ -3,10 +3,10 @@ package org.qualet.irl.light.shadow;
 import qualet.irlite.client.adapter.cml.CmlFilmAccess;
 import qualet.irlite.client.light.BbsModelSilhouette;
 import qualet.irlite.client.light.LightCollector;
+import qualet.irlite.client.light.ModelBlockScan;
 import qualet.irlite.forms.PointLightForm;
 import qualet.irlite.forms.SpotlightForm;
 import qualet.irlite.mixin.client.bbs.FilmsAccessor;
-import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
@@ -23,17 +23,14 @@ import mchorse.bbs_mod.selectors.SelectorOwner;
 import mchorse.bbs_mod.ui.film.controller.FilmEditorController;
 import mchorse.bbs_mod.utils.pose.Transform;
 
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.BlockEntityTickInvoker;
 
 import io.netty.util.collection.IntObjectMap;
 
@@ -108,51 +105,15 @@ final class CasterCollector
     private void collectModelBlocks(ClientWorld world, double camX, double camY, double camZ, OccluderSink sink)
     {
         // INVARIANT 4 scoping: all BBS reflection/accessor try/catch stays INSIDE
-        // this collect arm. A throwing collect for one caster degrades to
-        // "absent", never aborts the bake.
-        List<BlockEntityTickInvoker> tickers;
-        try
-        {
-            tickers = ((WorldBlockEntityTickersAccessor) (Object) world).irlite$getBlockEntityTickers();
-        }
-        catch (Throwable t)
-        {
-            return;
-        }
-        if (tickers == null)
-        {
-            return;
-        }
+        // this collect arm (the shared scan swallows its own failures). A throwing
+        // collect for one caster degrades to "absent", never aborts the bake.
+        // The ticker walk is shared with the light scan: one pass per frame.
+        List<ModelBlockEntity> blocks = ModelBlockScan.get(world, camX, camY, camZ);
 
         int collected = 0;
-        for (int idx = 0, n = tickers.size(); idx < n; idx++)
+        for (int idx = 0, n = blocks.size(); idx < n; idx++)
         {
-            BlockEntityTickInvoker invoker = tickers.get(idx);
-            if (invoker == null)
-            {
-                continue;
-            }
-            BlockPos pos = invoker.getPos();
-            if (pos == null)
-            {
-                continue;
-            }
-
-            double dx = pos.getX() + 0.5 - camX;
-            double dy = pos.getY() + 0.5 - camY;
-            double dz = pos.getZ() + 0.5 - camZ;
-            if (dx * dx + dy * dy + dz * dz > COLLECT_DIST_SQ)
-            {
-                continue;
-            }
-
-            BlockEntity be;
-            try { be = world.getBlockEntity(pos); }
-            catch (Throwable t) { continue; }
-            if (!(be instanceof ModelBlockEntity mbe))
-            {
-                continue;
-            }
+            ModelBlockEntity mbe = blocks.get(idx);
 
             ModelProperties props;
             try { props = mbe.getProperties(); }

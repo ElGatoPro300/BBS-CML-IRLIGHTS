@@ -2,18 +2,15 @@ package qualet.irlite.client.light;
 
 import qualet.irlite.client.light.LightCollector.ScratchFrame;
 import qualet.irlite.client.light.LightCollector.TraversalScratch;
-import qualet.irlite.mixin.client.bbs.WorldBlockEntityTickersAccessor;
 
 import mchorse.bbs_mod.blocks.entities.ModelBlockEntity;
 import mchorse.bbs_mod.blocks.entities.ModelProperties;
 import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.utils.pose.Transform;
 
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.BlockEntityTickInvoker;
 
 import org.joml.Matrix4f;
 
@@ -27,49 +24,12 @@ final class ModelBlockLightSource
 
     static void collect(ClientWorld world, Vec3d cameraPos, float tickDelta, TraversalScratch scratch)
     {
-        List<BlockEntityTickInvoker> tickers;
-        try
-        {
-            tickers = ((WorldBlockEntityTickersAccessor) (Object) world).irlite$getBlockEntityTickers();
-        }
-        catch (Throwable t)
-        {
-            return;
-        }
-        if (tickers == null)
-        {
-            return;
-        }
+        List<ModelBlockEntity> blocks = ModelBlockScan.get(world, cameraPos);
 
-        for (int i = 0, n = tickers.size(); i < n; i++)
+        for (int i = 0, n = blocks.size(); i < n; i++)
         {
-            BlockEntityTickInvoker invoker = tickers.get(i);
-            if (invoker == null)
-            {
-                continue;
-            }
-
-            BlockPos pos = invoker.getPos();
-            if (pos == null)
-            {
-                continue;
-            }
-
-            double dx = pos.getX() + 0.5 - cameraPos.x;
-            double dy = pos.getY() + 0.5 - cameraPos.y;
-            double dz = pos.getZ() + 0.5 - cameraPos.z;
-            if (dx * dx + dy * dy + dz * dz > LightCollector.MAX_DIST * LightCollector.MAX_DIST)
-            {
-                continue;
-            }
-
-            BlockEntity be;
-            try { be = world.getBlockEntity(pos); }
-            catch (Throwable t) { continue; }
-            if (!(be instanceof ModelBlockEntity mbe))
-            {
-                continue;
-            }
+            ModelBlockEntity mbe = blocks.get(i);
+            BlockPos pos = mbe.getPos();
 
             ModelProperties props;
             try { props = mbe.getProperties(); }

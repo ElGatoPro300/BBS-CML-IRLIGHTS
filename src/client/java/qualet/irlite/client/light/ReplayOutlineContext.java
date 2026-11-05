@@ -25,6 +25,8 @@ import org.lwjgl.opengl.GL11;
 
 import io.netty.util.collection.IntObjectMap;
 
+import java.util.List;
+
 /**
  * Which replay is being drawn right now, as a small integer the shader can read.
  *
@@ -99,9 +101,12 @@ public final class ReplayOutlineContext
         String film = controller.film.getId();
         IntObjectMap<IEntity> entities = controller.getEntities();
 
-        for (Replay replay : controller.film.replays.getList())
+        List<Replay> replays = controller.film.replays.getList();
+
+        for (int i = 0, n = replays.size(); i < n; i++)
         {
-            IEntity entity = entities.get(controller.film.replays.getList().indexOf(replay));
+            Replay replay = replays.get(i);
+            IEntity entity = entities.get(i);
 
             if (entity == null || !replay.enabled.get())
             {
