@@ -1,48 +1,48 @@
 {
-  "schemaVersion": 1,
-  "id": "irlite",
-  "version": "${version}",
-  "name": "IRLights",
-  "description": "",
-  "authors": [
-    "qualet",
-    "ElGatoPro300",
-    "wemppy"
-  ],
-  "contact": {},
-  "license": "MIT",
-  "icon": "assets/irlite/icon.png",
-  "environment": "*",
-  "entrypoints": {
-    "fabric-datagen": [
-      "qualet.irlite.client.IrliteDataGenerator"
+    "schemaVersion": 1,
+    "id": "irlite",
+    "version": "${version}",
+    "name": "IRLights",
+    "description": "",
+    "authors": [
+        "qualet",
+        "ElGatoPro300",
+        "wemppy"
     ],
-    "client": [
-      "qualet.irlite.client.IrliteClient"
+    "contact": {},
+    "license": "MIT",
+    "icon": "assets/irlite/icon.png",
+    "environment": "*",
+    "entrypoints": {
+        "fabric-datagen": [
+            "qualet.irlite.client.IrliteDataGenerator"
+        ],
+        "client": [
+            "qualet.irlite.client.IrliteClient"
+        ],
+        "main": [
+            "qualet.irlite.Irlite"
+        ],
+        "bbs-addon": [
+            "qualet.irlite.IrlightsAddon"
+        ],
+        "bbs-client-addon": [
+            "qualet.irlite.client.IrlightsClientAddon"
+        ]
+    },
+    "mixins": [
+        "irlite.mixins.json",
+        {
+            "config": "irlite.client.mixins.json",
+            "environment": "client"
+        }
     ],
-    "main": [
-      "qualet.irlite.Irlite"
-    ],
-    "bbs-addon": [
-      "qualet.irlite.IrlightsAddon"
-    ],
-    "bbs-client-addon": [
-      "qualet.irlite.client.IrlightsClientAddon"
-    ]
-  },
-  "mixins": [
-    "irlite.mixins.json",
-    {
-      "config": "irlite.client.mixins.json",
-      "environment": "client"
+    "depends": {
+        "fabricloader": ">=0.19.5",
+        "fabric-api": "*",
+        "bbs": ">=3.0-beta-7",
+        "minecraft": "=${minecraft_version}",
+        "irl-core": "*",
+        "java": ">=${java_version}"
     }
-  ],
-  "depends": {
-    "fabricloader": ">=0.19.5",
-    "fabric-api": "*",
-    "bbs": ">=3.0-0",
-    "minecraft": "=${minecraft_version}",
-    "irl-core": "*",
-    "java": ">=${java_version}"
-  }
 }

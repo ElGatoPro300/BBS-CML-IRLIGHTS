@@ -43,6 +43,10 @@ def select = { String id, String override ->
     entry
 }
 def cml = select('bbs', 'cmlJar')
+def requiredHost = providers.gradleProperty('cml_version').getOrElse('3.0-beta-7')
+if (!cml.version.toString().startsWith(requiredHost + '-')) {
+    throw new GradleException("Expected CML ${requiredHost}; found ${cml.version} in ${cml.file}")
+}
 def core = select('irl-core', 'coreJar')
 if (!(core.version == project.irl_core_version || core.version.startsWith(project.irl_core_version + '-'))) {
     throw new GradleException("Expected IRL Core ${project.irl_core_version}, found ${core.version} in ${core.file}")
